@@ -181,3 +181,7 @@ build/
 
 # Turbo output
 .turbo/
+
+# Sensitive configuration files
+wrangler.json
+.dev.vars

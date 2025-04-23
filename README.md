@@ -116,15 +116,25 @@ Get usage statistics.
    npm install
    ```
 
-3. Configure environment variables in `wrangler.json`:
-   - `ALLOWED_EMAILS`: Comma-separated list of emails allowed to access the application
-   - `JWT_SECRET`: Secret key for JWT token generation
-
-4. Create KV namespace:
+3. Create a `wrangler.json` file based on the example:
    ```bash
-   npx wrangler kv:namespace create "AUTH_STORE"
+   cp wrangler.example.json wrangler.json
+   ```
+
+4. Update the configuration with your own values:
+   - Replace `your-kv-namespace-id-here` with your KV namespace ID
+   - Replace `your-email@example.com` with your allowed email addresses
+   - Replace `your-secure-jwt-secret-here` with a secure JWT secret
+
+5. Create a KV namespace:
+   ```bash
+   npx wrangler kv namespace create AUTH_STORE
    ```
    Then update the `kv_namespaces` section in `wrangler.json` with the returned ID.
+
+6. Configure environment variables in `wrangler.json`:
+   - `ALLOWED_EMAILS`: Comma-separated list of emails allowed to access the application
+   - `JWT_SECRET`: Secret key for JWT token generation
 
 ### Development
 

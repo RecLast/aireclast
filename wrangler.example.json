@@ -12,12 +12,12 @@
   "kv_namespaces": [
     {
       "binding": "AUTH_STORE",
-      "id": "60a518a31bb748bd95a36c4038ee0e8b"
+      "id": "your-kv-namespace-id-here"
     }
   ],
   "vars": {
-    "ALLOWED_EMAILS": "by_reclast@hotmail.com",
-    "JWT_SECRET": "your-secure-jwt-secret-here-replace-this-in-production"
+    "ALLOWED_EMAILS": "your-email@example.com",
+    "JWT_SECRET": "your-secure-jwt-secret-here"
   },
   "assets": {
     "binding": "ASSETS",
