@@ -9,16 +9,6 @@
   "observability": {
     "enabled": true
   },
-  "kv_namespaces": [
-    {
-      "binding": "AUTH_STORE",
-      "id": "AuthIDishere"
-    }
-  ],
-  "vars": {
-    "ALLOWED_EMAILS": "yourmail@gmail.com",
-    "JWT_SECRET": "your-secure-jwt-secret-here-replace-this-in-production"
-  },
   "assets": {
     "binding": "ASSETS",
     "directory": "src/static"
