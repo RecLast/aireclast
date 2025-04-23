@@ -185,3 +185,4 @@ build/
 # Sensitive configuration files
 wrangler.json
 .dev.vars
+wrangler.json
