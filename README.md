@@ -1,32 +1,179 @@
-# Text To Image App
+# Cloudflare Workers AI API Gateway
 
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/cloudflare/templates/tree/main/aireclast)
+A comprehensive AI API gateway built with Cloudflare Workers and Cloudflare Workers AI, featuring a modern web interface and API endpoints for text, image, and code generation.
 
-![Text To Image Template Preview](https://imagedelivery.net/wSMYJvS3Xw-n339CbDyDIA/dddfe97e-e689-450b-d5a9-d49801da6a00/public)
+## Features
 
-<!-- dash-content-start -->
+- **Modern Web Interface**: Responsive and intuitive UI for interacting with AI models
+- **Text Generation**: Generate text using LLMs like Llama 2
+- **Image Generation**: Create images from text prompts using Stable Diffusion
+- **Code Generation**: Generate code with AI assistance
+- **Email Authentication**: Secure access with email verification codes
+- **Usage Statistics**: Track API usage and requests
+- **API Documentation**: Built-in examples for cURL, Python, and JavaScript
+- **Comprehensive Error Handling**: Robust validation and error responses
 
-Generate images based on text prompts using [Workers AI](https://developers.cloudflare.com/workers-ai/). In this example, going to the website will generate an image from the prompt "cyberpunk cat" using the `@cf/stabilityai/stable-diffusion-xl-base-1.0` model. Be patient! Your image may take a few seconds to generate.
+## Web Interface
 
-<!-- dash-content-end -->
+The application includes a complete web interface with the following pages:
 
-## Getting Started
+- **Login**: Secure authentication with email verification codes
+- **Dashboard**: Overview of usage statistics
+- **Image Generation**: Create images with customizable settings
+- **Text Generation**: Chat-like interface for text generation
+- **Code Generation**: Specialized interface for code generation
 
-Outside of this repo, you can start a new project with this template using [C3](https://developers.cloudflare.com/pages/get-started/c3/) (the `create-cloudflare` CLI):
+## API Endpoints
 
-```bash
-npm create cloudflare@latest -- --template=cloudflare/templates/aireclast
+### Authentication
+
+#### POST /api/auth/request-code
+Request a verification code for login.
+
+**Request Body:**
+```json
+{
+  "email": "test@example.com"
+}
 ```
 
-A live public deployment of this template is available at [https://aireclast.templates.workers.dev](https://aireclast.templates.workers.dev)
+#### POST /api/auth/verify
+Verify the code and authenticate.
 
-## Setup Steps
+**Request Body:**
+```json
+{
+  "email": "test@example.com",
+  "code": "123456"
+}
+```
 
-1. Install the project dependencies with a package manager of your choice:
+### Text Generation
+
+#### POST /api/text/generate
+Generate text using LLMs.
+
+**Request Body:**
+```json
+{
+  "prompt": "Write a short story about a robot learning to paint",
+  "model": "@cf/meta/llama-2-7b-chat-int8"
+}
+```
+
+### Image Generation
+
+#### POST /api/image/generate
+Generate images from text prompts.
+
+**Request Body:**
+```json
+{
+  "prompt": "A cyberpunk cat in a neon city",
+  "model": "@cf/stabilityai/stable-diffusion-xl-base-1.0",
+  "width": 640,
+  "height": 640,
+  "steps": 30
+}
+```
+
+### Code Generation
+
+#### POST /api/code/generate
+Generate code with AI assistance.
+
+**Request Body:**
+```json
+{
+  "prompt": "Write a function to calculate the Fibonacci sequence in JavaScript",
+  "model": "@cf/meta/llama-2-7b-chat-int8"
+}
+```
+
+### Statistics
+
+#### GET /api/stats
+Get usage statistics.
+
+## Setup and Deployment
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) (v16 or later)
+- [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/install-and-update/)
+- Cloudflare account with Workers and Workers AI access
+
+### Configuration
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/RecLast/aireclast.git
+   cd aireclast
+   ```
+
+2. Install dependencies:
    ```bash
    npm install
    ```
-2. Deploy the project!
+
+3. Configure environment variables in `wrangler.json`:
+   - `ALLOWED_EMAILS`: Comma-separated list of emails allowed to access the application
+   - `JWT_SECRET`: Secret key for JWT token generation
+
+4. Create KV namespace:
    ```bash
-   npx wrangler deploy
+   npx wrangler kv:namespace create "AUTH_STORE"
    ```
+   Then update the `kv_namespaces` section in `wrangler.json` with the returned ID.
+
+### Development
+
+Run the application locally:
+```bash
+npm run dev
+```
+
+### Deployment
+
+Deploy to Cloudflare Workers:
+```bash
+npm run deploy
+```
+
+## Project Structure
+
+```
+aireclast/
+├── src/
+│   ├── api/                     # API handlers
+│   │   ├── auth.ts              # Authentication API
+│   │   ├── text.ts              # Text generation API
+│   │   ├── image.ts             # Image generation API
+│   │   ├── code.ts              # Code generation API
+│   │   └── stats.ts             # Statistics API
+│   ├── middleware/              # Middleware functions
+│   │   ├── auth.ts              # Authentication middleware
+│   │   └── validation.ts        # Request validation
+│   ├── utils/                   # Utility functions
+│   │   ├── response.ts          # Response formatting
+│   │   ├── jwt.ts               # JWT handling
+│   │   └── email.ts             # Email utilities
+│   ├── static/                  # Static assets
+│   │   ├── css/                 # CSS styles
+│   │   ├── js/                  # JavaScript files
+│   │   └── images/              # Image assets
+│   ├── templates/               # HTML templates
+│   ├── types.ts                 # TypeScript type definitions
+│   └── index.ts                 # Main application entry point
+├── wrangler.json                # Cloudflare Workers configuration
+├── package.json                 # Project dependencies
+└── README.md                    # Project documentation
+```
+
+## Available Models
+
+For a complete list of available models, refer to the [Cloudflare Workers AI documentation](https://developers.cloudflare.com/workers-ai/models/).
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.

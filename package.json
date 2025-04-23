@@ -1,11 +1,12 @@
 {
   "name": "aireclast",
-  "description": "Generate images based on text prompts.",
+  "description": "AI API Gateway with a modern UI for text, image, and code generation.",
   "cloudflare": {
-    "label": "Text to Image App",
+    "label": "AI API Gateway",
     "products": [
       "Workers",
-      "AI"
+      "AI",
+      "KV"
     ],
     "categories": [
       "ai"
@@ -16,8 +17,12 @@
     "preview_image_url": "https://imagedelivery.net/wSMYJvS3Xw-n339CbDyDIA/dddfe97e-e689-450b-d5a9-d49801da6a00/public",
     "dash": true
   },
+  "dependencies": {
+    "itty-router": "^4.0.27",
+    "jose": "^5.2.3"
+  },
   "devDependencies": {
-    "typescript": "5.8.3",
+    "typescript": "^5.8.3",
     "wrangler": "4.12.0"
   },
   "scripts": {

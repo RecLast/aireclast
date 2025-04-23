@@ -8,5 +8,21 @@
   },
   "observability": {
     "enabled": true
+  },
+  "kv_namespaces": [
+    {
+      "binding": "AUTH_STORE",
+      "id": "auth-store",
+      "preview_id": "auth-store-preview"
+    }
+  ],
+
+  "vars": {
+    "ALLOWED_EMAILS": "by_reclast@hotmail.com",
+    "JWT_SECRET": "change-this-to-a-secure-secret-in-production"
+  },
+  "assets": {
+    "binding": "ASSETS",
+    "directory": "src/static"
   }
 }
