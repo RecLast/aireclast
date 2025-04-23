@@ -16,7 +16,7 @@ export interface Env {
   };
 
   // Environment variables
-  ALLOWED_EMAILS: string;
+  ALLOWED_EMAILS?: string;
   JWT_SECRET: string;
 }
 
