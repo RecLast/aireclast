@@ -1,9 +1,10 @@
+ <p align="center">
+  <img src="src/static/images/logo.png" alt="ReclastAI Logo">
+</p>
 
-# ReclastAI - Cloudflare Workers AI API Gateway
+<h1 align="center">ReclastAI - Cloudflare Workers AI API Gateway</h1>
 
 A comprehensive AI API gateway built with Cloudflare Workers and Cloudflare Workers AI, featuring a modern web interface and API endpoints for text, image, and code generation. Developed by [RecLast](https://www.umiteski.com.tr/) as an open-source solution for AI API access.
-
-![ReclastAI Logo](src/static/images/logo.png)
 
 ## Image
 
