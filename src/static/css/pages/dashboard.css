@@ -167,6 +167,39 @@
   }
 }
 
+/* API Key container styles */
+.api-key-container {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.api-key-container input {
+  flex: 1;
+  font-family: monospace;
+  padding: var(--spacing-md);
+  background-color: var(--background-light);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+}
+
+@media (max-width: 768px) {
+  .api-key-container {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .api-key-container input {
+    width: 100%;
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .api-key-container button {
+    width: 100%;
+  }
+}
+
 @media (max-width: 576px) {
   .stats-grid {
     grid-template-columns: 1fr;

@@ -33,6 +33,7 @@ textRouter.post('/generate',
       const options = data.options || {};
 
       // Call the AI model
+      console.log(`Generating text with model: ${model}`);
       const response = await env.AI.run(model, {
         prompt,
         ...options
@@ -64,9 +65,24 @@ textRouter.get('/models', async (_request: IRequest, _env: Env) => {
     // For now, we'll return a static list
     const models = [
       {
+        id: '@hf/thebloke/llama-2-13b-chat-awq',
+        name: 'Llama 2 (13B)',
+        description: 'Meta\'s Llama 2 larger model optimized for chat'
+      },
+      {
         id: '@cf/meta/llama-2-7b-chat-int8',
         name: 'Llama 2 (7B)',
         description: 'Meta\'s Llama 2 model optimized for chat'
+      },
+      {
+        id: '@cf/qwen/qwen1.5-14b-chat-awq',
+        name: 'Qwen 1.5 (14B)',
+        description: 'Alibaba\'s Qwen large language model'
+      },
+      {
+        id: '@cf/google/gemma-2b-it-lora',
+        name: 'Gemma (2B)',
+        description: 'Google\'s lightweight and efficient language model'
       },
       {
         id: '@cf/mistral/mistral-7b-instruct-v0.1',

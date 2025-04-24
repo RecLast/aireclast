@@ -109,6 +109,12 @@ function initLoginPage() {
         if (response.success) {
           app.showAlert('Authentication successful. Redirecting...', 'success');
 
+          // Save API key to localStorage if available
+          if (response.data && response.data.apiKey) {
+            console.log('Saving API key to localStorage');
+            localStorage.setItem('reclast_api_key', response.data.apiKey);
+          }
+
           // Redirect to dashboard
           setTimeout(() => {
             window.location.href = '/dashboard';

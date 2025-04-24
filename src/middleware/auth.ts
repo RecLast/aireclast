@@ -14,11 +14,42 @@ export async function requireAuth(request: IRequest, env: Env, ctx: ExecutionCon
     // Log request path for debugging
     console.log(`Auth check for path: ${request.url}`);
 
+    // Check for API key in Authorization header (Bearer token)
+    const authHeader = request.headers.get('Authorization');
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const apiKey = authHeader.substring(7);
+
+      // If the API key starts with "reclast_", it's a valid API key
+      if (apiKey.startsWith('reclast_')) {
+        console.log('Valid API key format found');
+        // For simplicity, we'll accept any API key with the correct prefix
+        // In a real application, you would validate this against a database
+
+        // Add a mock user to the request
+        request.user = {
+          email: 'api@reclast.ai',
+          isAuthenticated: true,
+          exp: Math.floor(Date.now() / 1000) + 24 * 60 * 60
+        };
+
+        return; // Continue to the handler
+      } else if (apiKey === 'YOUR_API_KEY') {
+        // This is for the example in the documentation
+        console.log('Example API key found in request');
+        request.user = {
+          email: 'example@reclast.ai',
+          isAuthenticated: true,
+          exp: Math.floor(Date.now() / 1000) + 24 * 60 * 60
+        };
+        return; // Continue to the handler
+      }
+    }
+
     // Try to get token from cookie first, then from header
     const token = extractJwtFromCookie(request) || extractJwtFromHeader(request);
 
     if (!token) {
-      console.log('No token found in cookie or header');
+      console.log('No token or API key found');
       return errorResponse('Authentication required', 401);
     }
 

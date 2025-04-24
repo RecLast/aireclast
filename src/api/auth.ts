@@ -74,6 +74,10 @@ authRouter.post('/login',
         const token = await createJwtToken(email, env.JWT_SECRET || 'fallback-secret-for-testing');
         console.log('JWT token created successfully');
 
+        // Generate a unique API key for this user (using email and username as seed)
+        const apiKey = `reclast_${btoa(`${email}:${username}:${Date.now()}`).replace(/=/g, '')}`;
+        console.log('API key generated successfully');
+
         // Create an auth cookie
         const authCookie = createAuthCookie(token);
         console.log('Auth cookie created successfully');
@@ -85,7 +89,8 @@ authRouter.post('/login',
             data: {
               message: 'Authentication successful',
               email,
-              username
+              username,
+              apiKey
             }
           }),
           {

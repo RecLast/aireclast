@@ -68,6 +68,21 @@ codeRouter.get('/models', async (_request: IRequest, _env: Env) => {
     // but optimized for code
     const models = [
       {
+        id: '@hf/thebloke/deepseek-coder-6.7b-base-awq',
+        name: 'DeepSeek Coder (6.7B)',
+        description: 'Specialized model for code generation with strong performance'
+      },
+      {
+        id: '@hf/thebloke/llama-2-13b-chat-awq',
+        name: 'Llama 2 (13B)',
+        description: 'Meta\'s Llama 2 larger model optimized for code generation'
+      },
+      {
+        id: '@cf/qwen/qwen1.5-14b-chat-awq',
+        name: 'Qwen 1.5 (14B)',
+        description: 'Alibaba\'s Qwen large language model for code generation'
+      },
+      {
         id: '@cf/meta/llama-2-7b-chat-int8',
         name: 'Llama 2 (7B)',
         description: 'Meta\'s Llama 2 model optimized for code generation'

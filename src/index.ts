@@ -33,19 +33,60 @@ router.get('/login', async (request, env) => {
   return env.ASSETS.fetch(new Request(`${new URL(request.url).origin}/templates/login.html`));
 });
 
+// Authentication check middleware for protected pages
+async function checkAuth(request: Request, env: Env): Promise<Response | null> {
+  try {
+    // Import the necessary functions
+    const { extractJwtFromCookie, verifyJwtToken } = await import('./utils/jwt');
+
+    // Get the token from cookie
+    const token = extractJwtFromCookie(request);
+    if (!token) {
+      console.log('No auth token found, redirecting to login');
+      return Response.redirect(`${new URL(request.url).origin}/login`, 302);
+    }
+
+    // Verify the token
+    const user = await verifyJwtToken(token, env.JWT_SECRET || 'fallback-secret-for-testing');
+    if (!user || !user.isAuthenticated) {
+      console.log('Invalid or expired token, redirecting to login');
+      return Response.redirect(`${new URL(request.url).origin}/login`, 302);
+    }
+
+    // Token is valid, continue
+    return null;
+  } catch (error) {
+    console.error('Auth check error:', error);
+    return Response.redirect(`${new URL(request.url).origin}/login`, 302);
+  }
+}
+
+// Protected routes that require authentication
 router.get('/dashboard', async (request, env) => {
+  const authResponse = await checkAuth(request, env);
+  if (authResponse) return authResponse;
+
   return env.ASSETS.fetch(new Request(`${new URL(request.url).origin}/templates/dashboard.html`));
 });
 
 router.get('/image', async (request, env) => {
+  const authResponse = await checkAuth(request, env);
+  if (authResponse) return authResponse;
+
   return env.ASSETS.fetch(new Request(`${new URL(request.url).origin}/templates/image.html`));
 });
 
 router.get('/text', async (request, env) => {
+  const authResponse = await checkAuth(request, env);
+  if (authResponse) return authResponse;
+
   return env.ASSETS.fetch(new Request(`${new URL(request.url).origin}/templates/text.html`));
 });
 
 router.get('/code', async (request, env) => {
+  const authResponse = await checkAuth(request, env);
+  if (authResponse) return authResponse;
+
   return env.ASSETS.fetch(new Request(`${new URL(request.url).origin}/templates/code.html`));
 });
 
