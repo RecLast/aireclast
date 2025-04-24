@@ -1,11 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login - AI API Gateway</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="/css/main.css">
+  {{> head}}
+  <title>Login - ReclastAI</title>
   <link rel="stylesheet" href="/css/pages/login.css">
 </head>
 <body>
@@ -14,13 +11,13 @@
 
     <div class="login-card">
       <div class="login-logo">
-        <img src="https://imagedelivery.net/wSMYJvS3Xw-n339CbDyDIA/5ca0ca32-e897-4699-d4c1-6b680512f000/public" alt="Logo">
-        <h1>AI API Gateway</h1>
+        <img src="/images/logo.png" alt="ReclastAI Logo">
+        <h1>ReclastAI</h1>
       </div>
 
       <div class="email-container">
         <h2 class="login-title">Sign In</h2>
-        <p class="login-subtitle">Enter your email to receive a verification code</p>
+        <p class="login-subtitle">Enter your email to continue</p>
 
         <form id="email-form">
           <div class="form-group">
@@ -28,34 +25,35 @@
             <input type="email" id="email" class="form-control" placeholder="your@email.com" required>
           </div>
 
-          <button type="submit" class="btn btn-primary w-100">Send Verification Code</button>
+          <button type="submit" class="btn btn-primary w-100">Continue</button>
         </form>
       </div>
 
-      <div class="verification-container">
-        <h2 class="login-title">Verification</h2>
-        <p class="login-subtitle">Enter the 6-digit code sent to your email</p>
+      <div class="credentials-container">
+        <h2 class="login-title">Login</h2>
+        <p class="login-subtitle">Enter your username and password to continue</p>
 
-        <form id="verification-form">
-          <div class="verification-code">
-            <input type="text" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
-            <input type="text" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
-            <input type="text" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
-            <input type="text" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
-            <input type="text" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
-            <input type="text" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+        <form id="credentials-form">
+          <div class="form-group">
+            <label for="username" class="form-label">Username</label>
+            <input type="text" id="username" class="form-control" placeholder="username" required>
           </div>
 
-          <button type="submit" class="btn btn-primary w-100">Verify</button>
+          <div class="form-group">
+            <label for="password" class="form-label">Password</label>
+            <input type="password" id="password" class="form-control" placeholder="password" required>
+          </div>
 
-          <div class="resend-code">
-            <button type="button" id="resend-code">Resend code or try another email</button>
+          <button type="submit" class="btn btn-primary w-100">Login</button>
+
+          <div class="back-to-email">
+            <button type="button" id="back-to-email">Try another email</button>
           </div>
         </form>
       </div>
 
       <div class="login-footer">
-        <p>Powered by Cloudflare Workers AI</p>
+        <p>Powered by <a href="https://www.umiteski.com.tr/" target="_blank">RecLast</a></p>
       </div>
     </div>
   </div>

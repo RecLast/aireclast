@@ -4,7 +4,7 @@
 
 // Environment variables and bindings
 export interface Env {
-  // Cloudflare Workers AI binding
+  // Cloudflare AI binding
   AI: any;
 
   // KV namespace for authentication
@@ -17,6 +17,7 @@ export interface Env {
 
   // Environment variables
   ALLOWED_EMAILS?: string;
+  USER_CREDENTIALS?: string;
   JWT_SECRET: string;
 }
 
@@ -27,12 +28,7 @@ export interface UserSession {
   exp: number;
 }
 
-// Auth verification code
-export interface VerificationCode {
-  code: string;
-  email: string;
-  expires: number;
-}
+
 
 // API response format
 export interface ApiResponse<T = any> {

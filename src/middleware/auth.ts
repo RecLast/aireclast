@@ -2,7 +2,7 @@
  * Authentication middleware
  */
 import { IRequest } from 'itty-router';
-import { Env, UserSession, VerificationCode } from '../types';
+import { Env, UserSession } from '../types';
 import { errorResponse } from '../utils/response';
 import { extractJwtFromCookie, extractJwtFromHeader, verifyJwtToken } from '../utils/jwt';
 
@@ -27,55 +27,4 @@ export async function requireAuth(request: IRequest, env: Env, ctx: ExecutionCon
   request.user = session;
 }
 
-/**
- * Store a verification code in KV
- */
-export async function storeVerificationCode(
-  env: Env,
-  email: string,
-  code: string,
-  expiresInMinutes: number = 10
-): Promise<void> {
-  const verificationData: VerificationCode = {
-    code,
-    email,
-    expires: Date.now() + expiresInMinutes * 60 * 1000
-  };
 
-  // Store the verification code with the email as the key
-  await env.AUTH_STORE.put(
-    `verification:${email}`,
-    JSON.stringify(verificationData),
-    { expirationTtl: expiresInMinutes * 60 }
-  );
-}
-
-/**
- * Verify a code for an email
- */
-export async function verifyCode(env: Env, email: string, code: string): Promise<boolean> {
-  const verificationDataStr = await env.AUTH_STORE.get(`verification:${email}`);
-
-  if (!verificationDataStr) {
-    return false;
-  }
-
-  const verificationData: VerificationCode = JSON.parse(verificationDataStr);
-
-  // Check if the code has expired
-  if (verificationData.expires < Date.now()) {
-    // Clean up expired code
-    await env.AUTH_STORE.delete(`verification:${email}`);
-    return false;
-  }
-
-  // Check if the code matches
-  if (verificationData.code !== code) {
-    return false;
-  }
-
-  // Clean up used code
-  await env.AUTH_STORE.delete(`verification:${email}`);
-
-  return true;
-}

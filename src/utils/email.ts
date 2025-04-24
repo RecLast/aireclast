@@ -1,21 +1,6 @@
 /**
- * Email utility functions
+ * Email and authentication utility functions
  */
-
-/**
- * Generate a random verification code
- */
-export function generateVerificationCode(length: number = 6): string {
-  const digits = '0123456789';
-  let code = '';
-
-  for (let i = 0; i < length; i++) {
-    const randomIndex = Math.floor(Math.random() * digits.length);
-    code += digits[randomIndex];
-  }
-
-  return code;
-}
 
 /**
  * Check if an email is in the allowed list
@@ -38,15 +23,34 @@ export function isEmailAllowed(email: string, allowedEmails: string | undefined)
 }
 
 /**
- * Send a verification code email (mock implementation)
- *
- * In a real implementation, you would use Cloudflare Email Workers or another email service
+ * Verify username and password against stored credentials
  */
-export async function sendVerificationEmail(email: string, code: string): Promise<boolean> {
-  // In a real implementation, you would send an actual email
-  console.log(`Sending verification code ${code} to ${email}`);
+export function verifyCredentials(
+  username: string,
+  password: string,
+  userCredentials: string | undefined
+): boolean {
+  // If userCredentials is undefined or empty, deny access in production
+  if (!userCredentials) {
+    console.warn('USER_CREDENTIALS environment variable is not defined. Denying access.');
+    return false;
+  }
 
-  // For demo purposes, we'll just log the code and return success
-  // In a production environment, you would integrate with an email service
-  return true;
+  try {
+    // Parse credentials in format "username1:password1,username2:password2"
+    const credentialsList = userCredentials.split(',').map(cred => {
+      const [user, pass] = cred.trim().split(':');
+      return { username: user, password: pass };
+    });
+
+    // Check if username and password match any credentials
+    return credentialsList.some(
+      cred => cred.username === username && cred.password === password
+    );
+  } catch (error) {
+    console.error('Error parsing USER_CREDENTIALS:', error);
+    return false;
+  }
 }
+
+

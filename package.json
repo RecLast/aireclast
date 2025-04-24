@@ -1,8 +1,8 @@
 {
   "name": "aireclast",
-  "description": "AI API Gateway with a modern UI for text, image, and code generation.",
+  "description": "ReclastAI with a modern UI for text, image, and code generation.",
   "cloudflare": {
-    "label": "AI API Gateway",
+    "label": "ReclastAI",
     "products": [
       "Workers",
       "AI",

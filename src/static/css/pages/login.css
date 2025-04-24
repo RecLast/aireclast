@@ -51,11 +51,11 @@
   text-align: center;
 }
 
-.verification-container {
+.credentials-container {
   display: none;
 }
 
-.verification-container.active {
+.credentials-container.active {
   display: block;
 }
 
@@ -63,34 +63,14 @@
   display: none;
 }
 
-.verification-code {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: var(--spacing-lg);
-}
 
-.verification-code input {
-  width: 40px;
-  height: 50px;
-  text-align: center;
-  font-size: 1.5rem;
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-md);
-  margin: 0 var(--spacing-xs);
-}
 
-.verification-code input:focus {
-  outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
-}
-
-.resend-code {
+.back-to-email {
   text-align: center;
   margin-top: var(--spacing-md);
 }
 
-.resend-code button {
+.back-to-email button {
   background: none;
   border: none;
   color: var(--primary-color);
@@ -98,7 +78,7 @@
   font-size: 0.875rem;
 }
 
-.resend-code button:hover {
+.back-to-email button:hover {
   text-decoration: underline;
 }
 

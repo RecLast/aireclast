@@ -1,6 +1,9 @@
-# Cloudflare Workers AI API Gateway
 
-A comprehensive AI API gateway built with Cloudflare Workers and Cloudflare Workers AI, featuring a modern web interface and API endpoints for text, image, and code generation.
+# ReclastAI - Cloudflare Workers AI API Gateway
+
+A comprehensive AI API gateway built with Cloudflare Workers and Cloudflare Workers AI, featuring a modern web interface and API endpoints for text, image, and code generation. Developed by [RecLast](https://www.umiteski.com.tr/) as an open-source solution for AI API access.
+
+![ReclastAI Logo](src/static/images/logo.png)
 
 ## Features
 
@@ -27,8 +30,8 @@ The application includes a complete web interface with the following pages:
 
 ### Authentication
 
-#### POST /api/auth/request-code
-Request a verification code for login.
+#### POST /api/auth/check-email
+Check if an email is allowed to access the application.
 
 **Request Body:**
 ```json
@@ -37,14 +40,15 @@ Request a verification code for login.
 }
 ```
 
-#### POST /api/auth/verify
-Verify the code and authenticate.
+#### POST /api/auth/login
+Login with username and password.
 
 **Request Body:**
 ```json
 {
   "email": "test@example.com",
-  "code": "123456"
+  "username": "admin",
+  "password": "securepass123"
 }
 ```
 
@@ -121,20 +125,80 @@ Get usage statistics.
    cp wrangler.example.json wrangler.json
    ```
 
-4. Update the configuration with your own values:
-   - Replace `your-kv-namespace-id-here` with your KV namespace ID
-   - Replace `your-email@example.com` with your allowed email addresses
-   - Replace `your-secure-jwt-secret-here` with a secure JWT secret
+4. Update the basic configuration in `wrangler.json`:
+   ```json
+   {
+     "compatibility_date": "2025-04-01",
+     "main": "src/index.ts",
+     "name": "aireclast",
+     "upload_source_maps": true,
+     "ai": {
+       "binding": "AI"
+     },
+     "observability": {
+       "enabled": true
+     },
+     "assets": {
+       "binding": "ASSETS",
+       "directory": "src/static"
+     }
+   }
+   ```
 
 5. Create a KV namespace:
    ```bash
    npx wrangler kv namespace create AUTH_STORE
    ```
-   Then update the `kv_namespaces` section in `wrangler.json` with the returned ID.
+   Note the returned ID for the next step.
 
-6. Configure environment variables in `wrangler.json`:
-   - `ALLOWED_EMAILS`: Comma-separated list of emails allowed to access the application
-   - `JWT_SECRET`: Secret key for JWT token generation
+6. **IMPORTANT**: Instead of adding sensitive information to `wrangler.json`, configure these settings directly in the Cloudflare Dashboard after deployment:
+
+   a. Go to Workers & Pages > Your Worker > Settings
+
+   b. Add KV Namespace binding:
+      - In the "Bindings" section, click "+ Add"
+      - Type: KV Namespace
+      - Variable name: AUTH_STORE
+      - KV Namespace: Select your created namespace
+
+   c. Add environment variables:
+      - In the "Variables and secrets" section, click "+ Add"
+      - Add ALLOWED_EMAILS (Plain text): Comma-separated list of emails allowed to access the application
+      - Add USER_CREDENTIALS (Plain text): Comma-separated list of username:password pairs (e.g., "admin:password123,user:pass456")
+      - Add JWT_SECRET (Secret): A secure secret key for JWT token generation
+
+7. **Two-Step Authentication**:
+
+   The application uses a simplified two-step authentication system:
+
+   a. **Step 1: Email Verification**
+      - User enters their email address
+      - If the email is in the allowed list (ALLOWED_EMAILS), they can proceed to the next step
+      - No verification codes or emails are sent
+
+   b. **Step 2: Username/Password Authentication**
+      - After email verification, user enters username and password
+      - Credentials are checked against the USER_CREDENTIALS environment variable
+      - If valid, user is authenticated and redirected to the dashboard
+
+   This approach provides good security without requiring email sending:
+   - Only allowed emails can proceed to the credentials step
+   - Even if someone knows an allowed email, they still need valid credentials
+   - No need for KV storage for verification codes
+   - No need for third-party email services or API keys
+
+   To set up the authentication:
+
+   1. Configure ALLOWED_EMAILS with comma-separated list of allowed email addresses
+   2. Configure USER_CREDENTIALS with comma-separated list of username:password pairs
+   3. Set a secure JWT_SECRET for token generation
+
+   Example configuration:
+   ```
+   ALLOWED_EMAILS: "admin@example.com,user@example.com"
+   USER_CREDENTIALS: "admin:securepass123,user:userpass456"
+   JWT_SECRET: "your-secure-random-string-here"
+   ```
 
 ### Development
 

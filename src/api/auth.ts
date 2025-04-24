@@ -4,18 +4,17 @@
 import { IRequest, Router } from 'itty-router';
 import { Env } from '../types';
 import { errorResponse, successResponse } from '../utils/response';
-import { generateVerificationCode, sendVerificationEmail } from '../utils/email';
+import { isEmailAllowed, verifyCredentials } from '../utils/email';
 import { createAuthCookie, createJwtToken } from '../utils/jwt';
-import { storeVerificationCode, verifyCode } from '../middleware/auth';
-import { validateEmail, validateRequestBody, validateVerificationCode } from '../middleware/validation';
+import { validateEmail, validateRequestBody } from '../middleware/validation';
 
 const authRouter = Router({ base: '/api/auth' });
 
 /**
- * Request a verification code
- * POST /api/auth/request-code
+ * Check if email is allowed
+ * POST /api/auth/check-email
  */
-authRouter.post('/request-code',
+authRouter.post('/check-email',
   validateRequestBody(['email']),
   validateEmail(),
   async (request: IRequest, env: Env) => {
@@ -23,44 +22,48 @@ authRouter.post('/request-code',
       const data = request.data || {};
       const email = data.email as string;
 
-      // Generate a verification code
-      const code = generateVerificationCode();
+      console.log(`Checking if email is allowed: ${email}`);
 
-      // Store the verification code
-      await storeVerificationCode(env, email, code);
+      // Check if email is in the allowed list
+      const isAllowed = isEmailAllowed(email, env.ALLOWED_EMAILS);
 
-      // Send the verification code via email
-      await sendVerificationEmail(email, code);
+      if (!isAllowed) {
+        return errorResponse('Email not authorized to access this application', 403);
+      }
 
+      // Return success
       return successResponse({
-        message: 'Verification code sent to your email'
+        message: 'Email verified successfully. Please enter your credentials.',
+        email: email
       });
     } catch (error) {
-      console.error('Error requesting verification code:', error);
-      return errorResponse('Failed to send verification code', 500);
+      console.error('Error checking email:', error);
+      return errorResponse('Failed to verify email', 500);
     }
   }
 );
 
 /**
- * Verify the code and login
- * POST /api/auth/verify
+ * Login with username and password after email verification
+ * POST /api/auth/login
  */
-authRouter.post('/verify',
-  validateRequestBody(['email', 'code']),
+authRouter.post('/login',
+  validateRequestBody(['email', 'username', 'password']),
   validateEmail(),
-  validateVerificationCode(),
   async (request: IRequest, env: Env) => {
     try {
       const data = request.data || {};
       const email = data.email as string;
-      const code = data.code as string;
+      const username = data.username as string;
+      const password = data.password as string;
 
-      // Verify the code
-      const isValid = await verifyCode(env, email, code);
+      console.log(`Login attempt for ${email} with username: ${username}`);
+
+      // Verify credentials
+      const isValid = verifyCredentials(username, password, env.USER_CREDENTIALS);
 
       if (!isValid) {
-        return errorResponse('Invalid or expired verification code', 400);
+        return errorResponse('Invalid username or password', 401);
       }
 
       // Create a JWT token
@@ -75,7 +78,8 @@ authRouter.post('/verify',
           success: true,
           data: {
             message: 'Authentication successful',
-            email
+            email,
+            username
           }
         }),
         {
@@ -86,8 +90,8 @@ authRouter.post('/verify',
         }
       );
     } catch (error) {
-      console.error('Error verifying code:', error);
-      return errorResponse('Failed to verify code', 500);
+      console.error('Error during login:', error);
+      return errorResponse('Login failed', 500);
     }
   }
 );
