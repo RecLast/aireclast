@@ -59,29 +59,45 @@ codeRouter.post('/generate',
  * Get available code models
  * GET /api/code/models
  */
-codeRouter.get('/models', async () => {
-  // In a real implementation, you would fetch this from Cloudflare's API
-  // For now, we'll return a static list - using the same models as text generation
-  // but optimized for code
-  const models = [
-    {
-      id: '@cf/meta/llama-2-7b-chat-int8',
-      name: 'Llama 2 (7B)',
-      description: 'Meta\'s Llama 2 model optimized for code generation'
-    },
-    {
-      id: '@cf/mistral/mistral-7b-instruct-v0.1',
-      name: 'Mistral 7B',
-      description: 'Mistral AI\'s instruction-tuned model for code'
-    },
-    {
-      id: '@cf/openchat/openchat-3.5-0106',
-      name: 'OpenChat 3.5',
-      description: 'Open-source model with strong code generation capabilities'
-    }
-  ];
+codeRouter.get('/models', async (_request: IRequest, _env: Env) => {
+  try {
+    console.log('Fetching code models');
 
-  return successResponse({ models });
+    // In a real implementation, you would fetch this from Cloudflare's API
+    // For now, we'll return a static list - using the same models as text generation
+    // but optimized for code
+    const models = [
+      {
+        id: '@cf/meta/llama-2-7b-chat-int8',
+        name: 'Llama 2 (7B)',
+        description: 'Meta\'s Llama 2 model optimized for code generation'
+      },
+      {
+        id: '@cf/mistral/mistral-7b-instruct-v0.1',
+        name: 'Mistral 7B',
+        description: 'Mistral AI\'s instruction-tuned model for code'
+      },
+      {
+        id: '@cf/openchat/openchat-3.5-0106',
+        name: 'OpenChat 3.5',
+        description: 'Open-source model with strong code generation capabilities'
+      }
+    ];
+
+    console.log(`Returning ${models.length} code models`);
+    return successResponse({ models });
+  } catch (error) {
+    console.error('Error fetching code models:', error);
+    return successResponse({
+      models: [
+        {
+          id: '@cf/meta/llama-2-7b-chat-int8',
+          name: 'Llama 2 (7B)',
+          description: 'Meta\'s Llama 2 model optimized for code generation'
+        }
+      ]
+    });
+  }
 });
 
 /**

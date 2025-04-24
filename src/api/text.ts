@@ -56,28 +56,44 @@ textRouter.post('/generate',
  * Get available text models
  * GET /api/text/models
  */
-textRouter.get('/models', async () => {
-  // In a real implementation, you would fetch this from Cloudflare's API
-  // For now, we'll return a static list
-  const models = [
-    {
-      id: '@cf/meta/llama-2-7b-chat-int8',
-      name: 'Llama 2 (7B)',
-      description: 'Meta\'s Llama 2 model optimized for chat'
-    },
-    {
-      id: '@cf/mistral/mistral-7b-instruct-v0.1',
-      name: 'Mistral 7B',
-      description: 'Mistral AI\'s instruction-tuned model'
-    },
-    {
-      id: '@cf/openchat/openchat-3.5-0106',
-      name: 'OpenChat 3.5',
-      description: 'Open-source chat model with strong performance'
-    }
-  ];
+textRouter.get('/models', async (_request: IRequest, _env: Env) => {
+  try {
+    console.log('Fetching text models');
 
-  return successResponse({ models });
+    // In a real implementation, you would fetch this from Cloudflare's API
+    // For now, we'll return a static list
+    const models = [
+      {
+        id: '@cf/meta/llama-2-7b-chat-int8',
+        name: 'Llama 2 (7B)',
+        description: 'Meta\'s Llama 2 model optimized for chat'
+      },
+      {
+        id: '@cf/mistral/mistral-7b-instruct-v0.1',
+        name: 'Mistral 7B',
+        description: 'Mistral AI\'s instruction-tuned model'
+      },
+      {
+        id: '@cf/openchat/openchat-3.5-0106',
+        name: 'OpenChat 3.5',
+        description: 'Open-source chat model with strong performance'
+      }
+    ];
+
+    console.log(`Returning ${models.length} text models`);
+    return successResponse({ models });
+  } catch (error) {
+    console.error('Error fetching text models:', error);
+    return successResponse({
+      models: [
+        {
+          id: '@cf/meta/llama-2-7b-chat-int8',
+          name: 'Llama 2 (7B)',
+          description: 'Meta\'s Llama 2 model optimized for chat'
+        }
+      ]
+    });
+  }
 });
 
 /**

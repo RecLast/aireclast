@@ -70,28 +70,44 @@ imageRouter.post('/generate',
  * Get available image models
  * GET /api/image/models
  */
-imageRouter.get('/models', async () => {
-  // In a real implementation, you would fetch this from Cloudflare's API
-  // For now, we'll return a static list
-  const models = [
-    {
-      id: '@cf/stabilityai/stable-diffusion-xl-base-1.0',
-      name: 'Stable Diffusion XL',
-      description: 'A state-of-the-art text-to-image model'
-    },
-    {
-      id: '@cf/lykon/dreamshaper-8-lcm',
-      name: 'DreamShaper',
-      description: 'Fast image generation with Latent Consistency Models'
-    },
-    {
-      id: '@cf/bytedance/stable-diffusion-xl-lightning',
-      name: 'SDXL Lightning',
-      description: 'Ultra-fast image generation'
-    }
-  ];
+imageRouter.get('/models', async (_request: IRequest, _env: Env) => {
+  try {
+    console.log('Fetching image models');
 
-  return successResponse({ models });
+    // In a real implementation, you would fetch this from Cloudflare's API
+    // For now, we'll return a static list
+    const models = [
+      {
+        id: '@cf/stabilityai/stable-diffusion-xl-base-1.0',
+        name: 'Stable Diffusion XL',
+        description: 'A state-of-the-art text-to-image model'
+      },
+      {
+        id: '@cf/lykon/dreamshaper-8-lcm',
+        name: 'DreamShaper',
+        description: 'Fast image generation with Latent Consistency Models'
+      },
+      {
+        id: '@cf/bytedance/stable-diffusion-xl-lightning',
+        name: 'SDXL Lightning',
+        description: 'Ultra-fast image generation'
+      }
+    ];
+
+    console.log(`Returning ${models.length} image models`);
+    return successResponse({ models });
+  } catch (error) {
+    console.error('Error fetching image models:', error);
+    return successResponse({
+      models: [
+        {
+          id: '@cf/stabilityai/stable-diffusion-xl-base-1.0',
+          name: 'Stable Diffusion XL',
+          description: 'A state-of-the-art text-to-image model'
+        }
+      ]
+    });
+  }
 });
 
 /**
