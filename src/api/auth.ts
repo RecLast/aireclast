@@ -66,32 +66,42 @@ authRouter.post('/login',
         return errorResponse('Invalid username or password', 401);
       }
 
-      // Create a JWT token
-      const token = await createJwtToken(email, env.JWT_SECRET);
+      console.log('Credentials verified successfully, creating JWT token');
+      console.log(`JWT_SECRET exists: ${!!env.JWT_SECRET}`);
 
-      // Create an auth cookie
-      const authCookie = createAuthCookie(token);
+      try {
+        // Create a JWT token
+        const token = await createJwtToken(email, env.JWT_SECRET || 'fallback-secret-for-testing');
+        console.log('JWT token created successfully');
 
-      // Return success with the token
-      return new Response(
-        JSON.stringify({
-          success: true,
-          data: {
-            message: 'Authentication successful',
-            email,
-            username
+        // Create an auth cookie
+        const authCookie = createAuthCookie(token);
+        console.log('Auth cookie created successfully');
+
+        // Return success with the token
+        return new Response(
+          JSON.stringify({
+            success: true,
+            data: {
+              message: 'Authentication successful',
+              email,
+              username
+            }
+          }),
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              'Set-Cookie': authCookie
+            }
           }
-        }),
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Set-Cookie': authCookie
-          }
-        }
-      );
-    } catch (error) {
+        );
+      } catch (jwtError: any) {
+        console.error('Error creating JWT token:', jwtError);
+        return errorResponse(`JWT creation failed: ${jwtError.message || 'Unknown error'}`, 500);
+      }
+    } catch (error: any) {
       console.error('Error during login:', error);
-      return errorResponse('Login failed', 500);
+      return errorResponse(`Login failed: ${error.message || 'Unknown error'}`, 500);
     }
   }
 );

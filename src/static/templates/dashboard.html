@@ -1,16 +1,53 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  {{> head}}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="/images/logo.png" type="image/png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/main.css">
   <title>Dashboard - ReclastAI</title>
   <link rel="stylesheet" href="/css/pages/dashboard.css">
 </head>
 <body>
   <div class="app-container">
-    {{> header}}
+    <header class="header">
+      <div class="header-logo">
+        <img src="/images/logo.png" alt="ReclastAI Logo">
+        <span>ReclastAI</span>
+      </div>
+
+      <button id="sidebar-toggle" class="btn btn-outline btn-sm d-md-none">
+        <i class="fas fa-bars"></i>
+      </button>
+
+      <nav class="header-nav">
+        <a href="/dashboard" class="header-nav-item">Dashboard</a>
+        <a href="#" id="logout-button" class="header-nav-item">Logout</a>
+      </nav>
+    </header>
 
     <div class="main-content">
-      {{> sidebar}}
+      <aside class="sidebar">
+        <nav class="sidebar-menu">
+          <a href="/dashboard" class="sidebar-menu-item">
+            <i class="fas fa-chart-line"></i>
+            <span>Dashboard</span>
+          </a>
+          <a href="/image" class="sidebar-menu-item">
+            <i class="fas fa-image"></i>
+            <span>Image Generation</span>
+          </a>
+          <a href="/text" class="sidebar-menu-item">
+            <i class="fas fa-comment-alt"></i>
+            <span>Text Generation</span>
+          </a>
+          <a href="/code" class="sidebar-menu-item">
+            <i class="fas fa-code"></i>
+            <span>Code Generation</span>
+          </a>
+        </nav>
+      </aside>
 
       <div class="content-area">
         <div class="alert-container"></div>

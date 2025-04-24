@@ -7,10 +7,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initialize components
   initSidebar();
   initActiveLinks();
-  
+
   // Initialize page-specific functionality
   const currentPage = getCurrentPage();
-  
+
   switch (currentPage) {
     case 'login':
       initLoginPage();
@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
  */
 function getCurrentPage() {
   const path = window.location.pathname;
-  
+
   if (path.includes('/login')) {
     return 'login';
   } else if (path.includes('/dashboard')) {
@@ -61,7 +61,7 @@ function initSidebar() {
   // Mobile sidebar toggle
   const sidebarToggle = document.getElementById('sidebar-toggle');
   const sidebar = document.querySelector('.sidebar');
-  
+
   if (sidebarToggle && sidebar) {
     sidebarToggle.addEventListener('click', () => {
       sidebar.classList.toggle('active');
@@ -74,7 +74,7 @@ function initSidebar() {
  */
 function initActiveLinks() {
   const currentPage = getCurrentPage();
-  
+
   // Set active class for sidebar links
   const sidebarLinks = document.querySelectorAll('.sidebar-menu-item');
   sidebarLinks.forEach(link => {
@@ -83,7 +83,7 @@ function initActiveLinks() {
       link.classList.add('active');
     }
   });
-  
+
   // Set active class for header links
   const headerLinks = document.querySelectorAll('.header-nav-item');
   headerLinks.forEach(link => {
@@ -102,12 +102,12 @@ function showAlert(message, type = 'error', duration = 5000) {
   const alertElement = document.createElement('div');
   alertElement.className = `alert alert-${type}`;
   alertElement.textContent = message;
-  
+
   // Add to the DOM
   const alertContainer = document.querySelector('.alert-container');
   if (alertContainer) {
     alertContainer.appendChild(alertElement);
-    
+
     // Remove after duration
     setTimeout(() => {
       alertElement.remove();
@@ -141,18 +141,18 @@ async function copyToClipboard(text) {
  */
 function initTabs(tabsContainerId) {
   const tabsContainer = document.getElementById(tabsContainerId);
-  
+
   if (!tabsContainer) return;
-  
+
   const tabs = tabsContainer.querySelectorAll('.tab');
   const tabContents = tabsContainer.querySelectorAll('.tab-content');
-  
+
   tabs.forEach(tab => {
     tab.addEventListener('click', () => {
       // Remove active class from all tabs and contents
       tabs.forEach(t => t.classList.remove('active'));
       tabContents.forEach(c => c.classList.remove('active'));
-      
+
       // Add active class to clicked tab and corresponding content
       tab.classList.add('active');
       const tabId = tab.getAttribute('data-tab');
@@ -173,17 +173,26 @@ async function apiRequest(endpoint, method = 'GET', data = null) {
       method,
       headers: {
         'Content-Type': 'application/json'
-      }
+      },
+      // Important: Include credentials to send cookies with the request
+      credentials: 'same-origin'
     };
-    
+
     if (data) {
       options.body = JSON.stringify(data);
     }
-    
+
     const response = await fetch(`/api/${endpoint}`, options);
-    const result = await response.json();
-    
-    return result;
+
+    // Check if response is JSON
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      const result = await response.json();
+      return result;
+    } else {
+      console.error(`API response is not JSON: ${await response.text()}`);
+      throw new Error('Invalid response format');
+    }
   } catch (error) {
     console.error(`API request error (${endpoint}):`, error);
     throw error;
