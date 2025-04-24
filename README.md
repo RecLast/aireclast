@@ -5,6 +5,10 @@ A comprehensive AI API gateway built with Cloudflare Workers and Cloudflare Work
 
 ![ReclastAI Logo](src/static/images/logo.png)
 
+## Image
+
+![ReclastAI Logo](src/static/images/app.png)
+
 ## Features
 
 - **Modern Web Interface**: Responsive and intuitive UI for interacting with AI models
