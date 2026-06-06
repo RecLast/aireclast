@@ -184,8 +184,8 @@ build/
 
 # Sensitive / local-only configuration (never commit)
 .dev.vars
-wrangler.json
 
 # Safe templates — commit these
 # .dev.vars.example
 # wrangler.example.json
+# wrangler.json — committed for CI (KV id via AUTH_STORE_KV_ID build variable or edit id in file)

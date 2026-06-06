@@ -28,13 +28,19 @@ A comprehensive AI API gateway built with Cloudflare Workers and Cloudflare Work
 
 ## Cloudflare Git deploy (CI)
 
-The repo does not commit `wrangler.json`. CI generates it before deploy:
+`wrangler.json` is committed so CI can deploy static assets (`src/static`).
 
-1. **Workers & Pages** → **aireclast** → **Settings** → **Build** → **Build variables**
-2. Add **`AUTH_STORE_KV_ID`** = your KV namespace ID (Dashboard → **Workers KV** → **AUTH_STORE** → **Settings** → Namespace ID)
-3. Deploy command stays: `npm run deploy`
+**Required:** Workers & Pages → **aireclast** → **Settings** → **Build** → **Build variables**
 
-Secrets (`JWT_SECRET`, `ALLOWED_EMAILS`, `USER_CREDENTIALS`) are set under **Worker** → **Settings** → **Variables and Secrets**, not in the repo.
+| Name | Value |
+|------|--------|
+| `AUTH_STORE_KV_ID` | Namespace ID from **Workers KV** → **AUTH_STORE** → **Settings** (not KV Pairs) |
+
+Deploy command: `npm run deploy` (runs `prepare-wrangler.mjs` then `wrangler deploy`).
+
+Use the **latest `main` commit** when retrying a build (not an older commit hash).
+
+Secrets (`JWT_SECRET`, `ALLOWED_EMAILS`, `USER_CREDENTIALS`): **Worker** → **Settings** → **Variables and Secrets**.
 
 ## Web Interface
 
