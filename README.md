@@ -26,22 +26,6 @@ A comprehensive AI API gateway built with Cloudflare Workers and Cloudflare Work
 
 - [Mobile API integration](docs/MOBILE_API.md)
 
-## Cloudflare Git deploy (CI)
-
-`wrangler.json` is committed so CI can deploy static assets (`src/static`).
-
-**Required:** Workers & Pages → **aireclast** → **Settings** → **Build** → **Build variables**
-
-| Name | Value |
-|------|--------|
-| `AUTH_STORE_KV_ID` | Namespace ID from **Workers KV** → **AUTH_STORE** → **Settings** (not KV Pairs) |
-
-Deploy command: `npm run deploy` (runs `prepare-wrangler.mjs` then `wrangler deploy`).
-
-Use the **latest `main` commit** when retrying a build (not an older commit hash).
-
-Secrets (`JWT_SECRET`, `ALLOWED_EMAILS`, `USER_CREDENTIALS`): **Worker** → **Settings** → **Variables and Secrets**.
-
 ## Web Interface
 
 The application includes a complete web interface with the following pages:
@@ -235,38 +219,27 @@ Authorization: Bearer reclast_xxxxxxxxxxxxxxxxxxxx
    npm install
    ```
 
-3. Create a `wrangler.json` file based on the example:
-   ```bash
-   cp wrangler.example.json wrangler.json
-   ```
+3. Use your local `wrangler.json` (gitignored — not committed). Minimal shape:
 
-4. Update the basic configuration in `wrangler.json`:
    ```json
    {
-     "compatibility_date": "2025-04-01",
+     "compatibility_date": "2025-06-01",
      "main": "src/index.ts",
      "name": "aireclast",
      "upload_source_maps": true,
-     "ai": {
-       "binding": "AI"
-     },
-     "observability": {
-       "enabled": true
-     },
-     "assets": {
-       "binding": "ASSETS",
-       "directory": "src/static"
-     }
+     "ai": { "binding": "AI", "remote": true },
+     "observability": { "enabled": true },
+     "assets": { "binding": "ASSETS", "directory": "src/static" }
    }
    ```
 
-5. Create a KV namespace:
+4. Create a KV namespace:
    ```bash
    npx wrangler kv namespace create AUTH_STORE
    ```
    Note the returned ID for the next step.
 
-6. **IMPORTANT**: Instead of adding sensitive information to `wrangler.json`, configure these settings directly in the Cloudflare Dashboard after deployment:
+5. **IMPORTANT**: Configure secrets and the KV binding in the Cloudflare Dashboard (not in `wrangler.json`):
 
    a. Go to Workers & Pages > Your Worker > Settings
 
