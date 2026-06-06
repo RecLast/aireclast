@@ -26,6 +26,16 @@ A comprehensive AI API gateway built with Cloudflare Workers and Cloudflare Work
 
 - [Mobile API integration](docs/MOBILE_API.md)
 
+## Cloudflare Git deploy (CI)
+
+The repo does not commit `wrangler.json`. CI generates it before deploy:
+
+1. **Workers & Pages** → **aireclast** → **Settings** → **Build** → **Build variables**
+2. Add **`AUTH_STORE_KV_ID`** = your KV namespace ID (Dashboard → **Workers KV** → **AUTH_STORE** → **Settings** → Namespace ID)
+3. Deploy command stays: `npm run deploy`
+
+Secrets (`JWT_SECRET`, `ALLOWED_EMAILS`, `USER_CREDENTIALS`) are set under **Worker** → **Settings** → **Variables and Secrets**, not in the repo.
+
 ## Web Interface
 
 The application includes a complete web interface with the following pages:
