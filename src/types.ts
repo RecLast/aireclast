@@ -53,7 +53,7 @@ export interface ImageGenerationRequest {
   width?: number;
   height?: number;
   steps?: number;
-  confirmPremium?: boolean; // Flag to confirm usage of premium models
+  confirmPremium?: boolean;
 }
 
 // Text generation request

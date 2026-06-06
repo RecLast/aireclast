@@ -1,67 +1,55 @@
 import { Router } from 'itty-router';
 import { Env } from './types';
 import { errorResponse } from './utils/response';
+import { getCorsHeaders } from './utils/cors';
 import authRouter from './api/auth';
 import imageRouter from './api/image';
 import textRouter from './api/text';
 import codeRouter from './api/code';
 import statsRouter from './api/stats';
 
-// Create a router
 const router = Router();
 
-// CORS middleware
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-  'Access-Control-Allow-Credentials': 'true',
-};
+router.options('*', (request: Request) => new Response(null, { headers: getCorsHeaders(request) }));
 
-// Options request handler
-router.options('*', () => new Response(null, { headers: corsHeaders }));
+router.all('/api/auth/*', (request, env, ctx) => authRouter.handle(request, env, ctx));
+router.all('/api/image/*', (request, env, ctx) => imageRouter.handle(request, env, ctx));
+router.all('/api/text/*', (request, env, ctx) => textRouter.handle(request, env, ctx));
+router.all('/api/code/*', (request, env, ctx) => codeRouter.handle(request, env, ctx));
+router.all('/api/stats/*', (request, env, ctx) => statsRouter.handle(request, env, ctx));
 
-// API routes
-router.all('/api/auth/*', (request, env) => authRouter.handle(request, env));
-router.all('/api/image/*', (request, env) => imageRouter.handle(request, env));
-router.all('/api/text/*', (request, env) => textRouter.handle(request, env));
-router.all('/api/code/*', (request, env) => codeRouter.handle(request, env));
-router.all('/api/stats/*', (request, env) => statsRouter.handle(request, env));
+router.get('/favicon.ico', async (request, env) => {
+  return env.ASSETS.fetch(new Request(`${new URL(request.url).origin}/images/favicon.ico`));
+});
 
-// Add routes for HTML pages
 router.get('/login', async (request, env) => {
   return env.ASSETS.fetch(new Request(`${new URL(request.url).origin}/templates/login.html`));
 });
 
-// Authentication check middleware for protected pages
 async function checkAuth(request: Request, env: Env): Promise<Response | null> {
   try {
-    // Import the necessary functions
     const { extractJwtFromCookie, verifyJwtToken } = await import('./utils/jwt');
 
-    // Get the token from cookie
     const token = extractJwtFromCookie(request);
     if (!token) {
-      console.log('No auth token found, redirecting to login');
       return Response.redirect(`${new URL(request.url).origin}/login`, 302);
     }
 
-    // Verify the token
-    const user = await verifyJwtToken(token, env.JWT_SECRET || 'fallback-secret-for-testing');
+    if (!env.JWT_SECRET) {
+      return Response.redirect(`${new URL(request.url).origin}/login`, 302);
+    }
+
+    const user = await verifyJwtToken(token, env.JWT_SECRET);
     if (!user || !user.isAuthenticated) {
-      console.log('Invalid or expired token, redirecting to login');
       return Response.redirect(`${new URL(request.url).origin}/login`, 302);
     }
 
-    // Token is valid, continue
     return null;
-  } catch (error) {
-    console.error('Auth check error:', error);
+  } catch {
     return Response.redirect(`${new URL(request.url).origin}/login`, 302);
   }
 }
 
-// Protected routes that require authentication
 router.get('/dashboard', async (request, env) => {
   const authResponse = await checkAuth(request, env);
   if (authResponse) return authResponse;
@@ -93,30 +81,20 @@ router.get('/code', async (request, env) => {
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     try {
-      // Get the URL path
-      const url = new URL(request.url);
-      const path = url.pathname;
-
-      console.log(`Handling request for: ${path}`);
-
-      // First, try to handle routes with the router
       const routerResponse = await router.handle(request, env, ctx);
       if (routerResponse) {
         return routerResponse;
       }
 
-      // If no route matched, try to serve a static asset
       try {
         return await env.ASSETS.fetch(request);
-      } catch (error) {
-        console.error(`Error serving static asset: ${error}`);
-
-        // If we get here, return a 404
+      } catch {
+        const path = new URL(request.url).pathname;
         return new Response(`Not found: ${path}`, { status: 404 });
       }
     } catch (error) {
       console.error('Unhandled error:', error);
-      return errorResponse(`Server error: ${error instanceof Error ? error.message : 'Unknown error'}`, 500);
+      return errorResponse('Server error', 500, request);
     }
   },
 };

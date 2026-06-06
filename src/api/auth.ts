@@ -5,8 +5,12 @@ import { IRequest, Router } from 'itty-router';
 import { Env } from '../types';
 import { errorResponse, successResponse } from '../utils/response';
 import { isEmailAllowed, verifyCredentials } from '../utils/email';
-import { createAuthCookie, createJwtToken } from '../utils/jwt';
-import { validateEmail, validateRequestBody } from '../middleware/validation';
+import { regenerateApiKey, storeApiKey, generateApiKey, getApiKeyForUser } from '../utils/apiKey';
+import { createAuthCookie, createJwtToken, clearAuthCookie } from '../utils/jwt';
+import { validateEmailFormat, validateRequestBody } from '../middleware/validation';
+import { requireAuth } from '../middleware/auth';
+import { enforceAuthRateLimit } from '../utils/rateLimit';
+import { getCorsHeaders } from '../utils/cors';
 
 const authRouter = Router({ base: '/api/auth' });
 
@@ -16,29 +20,18 @@ const authRouter = Router({ base: '/api/auth' });
  */
 authRouter.post('/check-email',
   validateRequestBody(['email']),
-  validateEmail(),
+  validateEmailFormat(),
   async (request: IRequest, env: Env) => {
     try {
-      const data = request.data || {};
-      const email = data.email as string;
+      const rateLimited = await enforceAuthRateLimit(request, env, 'check-email');
+      if (rateLimited) return rateLimited;
 
-      console.log(`Checking if email is allowed: ${email}`);
-
-      // Check if email is in the allowed list
-      const isAllowed = isEmailAllowed(email, env.ALLOWED_EMAILS);
-
-      if (!isAllowed) {
-        return errorResponse('Email not authorized to access this application', 403);
-      }
-
-      // Return success
       return successResponse({
-        message: 'Email verified successfully. Please enter your credentials.',
-        email: email
-      });
+        message: 'If your email is authorized, enter your credentials to continue.',
+      }, request);
     } catch (error) {
       console.error('Error checking email:', error);
-      return errorResponse('Failed to verify email', 500);
+      return errorResponse('Failed to verify email', 500, request);
     }
   }
 );
@@ -49,64 +42,60 @@ authRouter.post('/check-email',
  */
 authRouter.post('/login',
   validateRequestBody(['email', 'username', 'password']),
-  validateEmail(),
+  validateEmailFormat(),
   async (request: IRequest, env: Env) => {
     try {
+      const rateLimited = await enforceAuthRateLimit(request, env, 'login');
+      if (rateLimited) return rateLimited;
+
       const data = request.data || {};
       const email = data.email as string;
       const username = data.username as string;
       const password = data.password as string;
 
-      console.log(`Login attempt for ${email} with username: ${username}`);
+      if (!isEmailAllowed(email, env.ALLOWED_EMAILS)) {
+        return errorResponse('Invalid email or credentials', 401, request);
+      }
 
-      // Verify credentials
       const isValid = verifyCredentials(username, password, env.USER_CREDENTIALS);
 
       if (!isValid) {
-        return errorResponse('Invalid username or password', 401);
+        return errorResponse('Invalid email or credentials', 401, request);
       }
 
-      console.log('Credentials verified successfully, creating JWT token');
-      console.log(`JWT_SECRET exists: ${!!env.JWT_SECRET}`);
-
-      try {
-        // Create a JWT token
-        const token = await createJwtToken(email, env.JWT_SECRET || 'fallback-secret-for-testing');
-        console.log('JWT token created successfully');
-
-        // Generate a unique API key for this user (using email and username as seed)
-        const apiKey = `reclast_${btoa(`${email}:${username}:${Date.now()}`).replace(/=/g, '')}`;
-        console.log('API key generated successfully');
-
-        // Create an auth cookie
-        const authCookie = createAuthCookie(token);
-        console.log('Auth cookie created successfully');
-
-        // Return success with the token
-        return new Response(
-          JSON.stringify({
-            success: true,
-            data: {
-              message: 'Authentication successful',
-              email,
-              username,
-              apiKey
-            }
-          }),
-          {
-            headers: {
-              'Content-Type': 'application/json',
-              'Set-Cookie': authCookie
-            }
-          }
-        );
-      } catch (jwtError: any) {
-        console.error('Error creating JWT token:', jwtError);
-        return errorResponse(`JWT creation failed: ${jwtError.message || 'Unknown error'}`, 500);
+      if (!env.JWT_SECRET) {
+        return errorResponse('Authentication is not configured', 500, request);
       }
-    } catch (error: any) {
+
+      const token = await createJwtToken(email, env.JWT_SECRET);
+
+      let apiKey = await getApiKeyForUser(email, env);
+      if (!apiKey) {
+        apiKey = generateApiKey();
+      }
+      await storeApiKey(email, apiKey, env);
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          data: {
+            message: 'Authentication successful',
+            email,
+            username,
+            apiKey,
+          },
+        }),
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Set-Cookie': createAuthCookie(token),
+            ...getCorsHeaders(request),
+          },
+        }
+      );
+    } catch (error: unknown) {
       console.error('Error during login:', error);
-      return errorResponse(`Login failed: ${error.message || 'Unknown error'}`, 500);
+      return errorResponse('Login failed', 500, request);
     }
   }
 );
@@ -115,32 +104,55 @@ authRouter.post('/login',
  * Check if the user is authenticated
  * GET /api/auth/check
  */
-authRouter.get('/check', async (request: IRequest) => {
-  // The requireAuth middleware will handle authentication
-  // If we get here, the user is authenticated
+authRouter.get('/check', requireAuth, async (request: IRequest) => {
   return successResponse({
     isAuthenticated: true,
-    user: request.user
-  });
+    user: request.user,
+  }, request);
+});
+
+/**
+ * Regenerate API key for the authenticated user
+ * POST /api/auth/regenerate-key
+ */
+authRouter.post('/regenerate-key', requireAuth, async (request: IRequest, env: Env) => {
+  try {
+    const email = request.user?.email;
+
+    if (!email) {
+      return errorResponse('Authentication required', 401, request);
+    }
+
+    const apiKey = await regenerateApiKey(email, env);
+
+    return successResponse({
+      message: 'API key regenerated successfully',
+      apiKey,
+    }, request);
+  } catch (error) {
+    console.error('Error regenerating API key:', error);
+    return errorResponse('Failed to regenerate API key', 500, request);
+  }
 });
 
 /**
  * Logout
  * POST /api/auth/logout
  */
-authRouter.post('/logout', () => {
+authRouter.post('/logout', (request: IRequest) => {
   return new Response(
     JSON.stringify({
       success: true,
       data: {
-        message: 'Logged out successfully'
-      }
+        message: 'Logged out successfully',
+      },
     }),
     {
       headers: {
         'Content-Type': 'application/json',
-        'Set-Cookie': 'auth=; Path=/; HttpOnly; Secure; SameSite=Strict; Expires=Thu, 01 Jan 1970 00:00:00 GMT'
-      }
+        'Set-Cookie': clearAuthCookie(),
+        ...getCorsHeaders(request),
+      },
     }
   );
 });

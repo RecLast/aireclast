@@ -3,7 +3,6 @@
  */
 import { IRequest } from 'itty-router';
 import { errorResponse } from '../utils/response';
-import { isEmailAllowed } from '../utils/email';
 import { Env } from '../types';
 
 /**
@@ -37,29 +36,31 @@ export function validateRequestBody(requiredFields: string[]) {
 }
 
 /**
- * Validate email format and check if it's in the allowed list
+ * Validate email format only (no allowlist check — avoids enumeration)
  */
-export function validateEmail() {
-  return async (request: IRequest, env: Env, ctx: ExecutionContext): Promise<Response | void> => {
+export function validateEmailFormat() {
+  return async (request: IRequest): Promise<Response | void> => {
     const data = request.data;
 
     if (!data || !data.email) {
-      return errorResponse('Email is required', 400);
+      return errorResponse('Email is required', 400, request);
     }
 
     const email = data.email.trim();
+    data.email = email;
 
-    // Basic email format validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      return errorResponse('Invalid email format', 400);
-    }
-
-    // Check if email is in the allowed list
-    if (!isEmailAllowed(email, env.ALLOWED_EMAILS)) {
-      return errorResponse('Email not authorized to access this application', 403);
+      return errorResponse('Invalid email format', 400, request);
     }
   };
+}
+
+/**
+ * @deprecated Use validateEmailFormat() — allowlist checks belong in route handlers
+ */
+export function validateEmail() {
+  return validateEmailFormat();
 }
 
 /**

@@ -69,54 +69,23 @@
                 <div class="image-form-col">
                   <label class="form-label">Model</label>
                   <select id="model-select" class="form-control">
-                    <option value="@cf/stabilityai/stable-diffusion-xl-base-1.0">Stable Diffusion XL</option>
+                    <option value="">Loading models...</option>
                   </select>
                 </div>
 
                 <div class="image-form-col">
                   <label class="form-label">Steps</label>
                   <div class="d-flex align-items-center">
-                    <input type="range" id="steps-range" class="form-control" min="10" max="50" value="30">
-                    <span id="steps-value" class="ml-2">30</span>
+                    <input type="range" id="steps-range" class="form-control" min="1" max="4" value="4">
+                    <span id="steps-value" class="ml-2">4</span>
                   </div>
                 </div>
               </div>
 
               <div class="image-form-group">
                 <label class="form-label">Dimensions</label>
-                <div class="image-dimensions">
-                  <div class="dimension-option">
-                    <input type="radio" id="dim-540x960" name="dimensions" value="540x960" class="dimension-radio">
-                    <label for="dim-540x960" class="dimension-label">
-                      <div class="dimension-preview portrait"></div>
-                      <div class="dimension-text">540x960</div>
-                    </label>
-                  </div>
-
-                  <div class="dimension-option">
-                    <input type="radio" id="dim-960x540" name="dimensions" value="960x540" class="dimension-radio">
-                    <label for="dim-960x540" class="dimension-label">
-                      <div class="dimension-preview landscape"></div>
-                      <div class="dimension-text">960x540</div>
-                    </label>
-                  </div>
-
-                  <div class="dimension-option">
-                    <input type="radio" id="dim-640x640" name="dimensions" value="640x640" class="dimension-radio" checked>
-                    <label for="dim-640x640" class="dimension-label">
-                      <div class="dimension-preview square"></div>
-                      <div class="dimension-text">640x640</div>
-                    </label>
-                  </div>
-
-                  <div class="dimension-option">
-                    <input type="radio" id="dim-1280x720" name="dimensions" value="1280x720" class="dimension-radio">
-                    <label for="dim-1280x720" class="dimension-label">
-                      <div class="dimension-preview landscape"></div>
-                      <div class="dimension-text">1280x720</div>
-                    </label>
-                  </div>
-                </div>
+                <div class="image-dimensions" id="dimension-options"></div>
+                <p id="model-neuron-note" class="form-hint text-muted mt-2"></p>
               </div>
 
               <button type="submit" id="generate-button" class="btn btn-primary">
@@ -165,15 +134,15 @@
                 </button>
               </div>
               <div class="code-block">
-                <code id="curl-code">curl -X POST https://aireclast.umiteski.workers.dev/api/image/generate \
+                <code id="curl-code">curl -X POST https://YOUR-WORKER.workers.dev/api/image/generate \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -d '{
     "prompt": "A cyberpunk cat in a neon city",
-    "model": "@cf/stabilityai/stable-diffusion-xl-base-1.0",
-    "width": 640,
-    "height": 640,
-    "steps": 30
+    "model": "@cf/bytedance/stable-diffusion-xl-lightning",
+    "width": 1024,
+    "height": 1024,
+    "steps": 4
   }'</code>
               </div>
             </div>
@@ -189,17 +158,17 @@
                 <code id="python-code">import requests
 import json
 
-url = "https://aireclast.umiteski.workers.dev/api/image/generate"
+url = "https://YOUR-WORKER.workers.dev/api/image/generate"
 headers = {
     "Content-Type": "application/json",
     "Authorization": "Bearer YOUR_API_KEY"
 }
 data = {
     "prompt": "A cyberpunk cat in a neon city",
-    "model": "@cf/stabilityai/stable-diffusion-xl-base-1.0",
-    "width": 640,
-    "height": 640,
-    "steps": 30
+    "model": "@cf/bytedance/stable-diffusion-xl-lightning",
+    "width": 1024,
+    "height": 1024,
+    "steps": 4
 }
 
 response = requests.post(url, headers=headers, data=json.dumps(data))
@@ -224,13 +193,13 @@ else:
               </div>
               <div class="code-block">
                 <code id="js-code">async function generateImage() {
-  const url = 'https://aireclast.umiteski.workers.dev/api/image/generate';
+  const url = 'https://YOUR-WORKER.workers.dev/api/image/generate';
   const data = {
     prompt: "A cyberpunk cat in a neon city",
-    model: "@cf/stabilityai/stable-diffusion-xl-base-1.0",
-    width: 640,
-    height: 640,
-    steps: 30
+    model: "@cf/bytedance/stable-diffusion-xl-lightning",
+    width: 1024,
+    height: 1024,
+    steps: 4
   };
 
   try {

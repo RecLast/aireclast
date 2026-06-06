@@ -1,11 +1,18 @@
 {
-  "compatibility_date": "2025-04-01",
+  "compatibility_date": "2025-06-01",
   "main": "src/index.ts",
   "name": "aireclast",
   "upload_source_maps": true,
   "ai": {
-    "binding": "AI"
+    "binding": "AI",
+    "remote": true
   },
+  "kv_namespaces": [
+    {
+      "binding": "AUTH_STORE",
+      "id": "YOUR_KV_NAMESPACE_ID"
+    }
+  ],
   "observability": {
     "enabled": true
   },

@@ -43,7 +43,7 @@ function initLoginPage() {
           // Focus on username input
           usernameInput.focus();
 
-          app.showAlert('Email verified. Please enter your credentials.', 'success');
+          app.showAlert('Please enter your credentials to continue.', 'success');
         } else {
           app.showAlert(response.error || 'Email not authorized', 'error');
 

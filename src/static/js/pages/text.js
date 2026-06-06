@@ -4,7 +4,7 @@
 
 // Store current settings for API examples
 let currentSettings = {
-  model: '@cf/meta/llama-2-7b-chat-int8',
+  model: '@cf/meta/llama-3.1-8b-instruct-fp8-fast',
   prompt: ''
 };
 
@@ -115,7 +115,7 @@ async function fetchModels() {
     const response = await app.apiRequest('text/models', 'GET');
 
     if (response.success && response.data && response.data.models) {
-      populateModelSelect(response.data.models);
+      populateModelSelect(response.data.models, response.data.defaultModel);
     }
   } catch (error) {
     console.error('Error fetching models:', error);
@@ -126,31 +126,30 @@ async function fetchModels() {
 /**
  * Populate the model select dropdown
  */
-function populateModelSelect(models) {
+function populateModelSelect(models, defaultModelId) {
   const modelSelect = document.getElementById('model-select');
 
   if (!modelSelect) return;
 
-  // Clear existing options
   modelSelect.innerHTML = '';
 
-  // Add models to select
   models.forEach(model => {
     const option = document.createElement('option');
     option.value = model.id;
-    option.textContent = model.name;
-    option.title = model.description;
+    option.textContent = `${model.name} (${model.neuronCost} Neuron cost)`;
+    option.title = `${model.description} — ${model.neuronNote}`;
     modelSelect.appendChild(option);
   });
 
-  // Update current settings
-  if (models.length > 0) {
-    currentSettings.model = models[0].id;
+  const initialModel = defaultModelId || models[0]?.id;
+  if (initialModel) {
+    modelSelect.value = initialModel;
+    currentSettings.model = initialModel;
 
-    // Update chat header with selected model
     const chatModelName = document.getElementById('chat-model-name');
-    if (chatModelName) {
-      chatModelName.textContent = models[0].name;
+    const selected = models.find((m) => m.id === initialModel);
+    if (chatModelName && selected) {
+      chatModelName.textContent = selected.name;
     }
 
     updateApiExamples();
@@ -267,7 +266,9 @@ function updateCurlExample() {
 
   if (!curlCode) return;
 
-  const curlExample = `curl -X POST https://aireclast.umiteski.workers.dev/api/text/generate \\
+  const baseUrl = window.location.origin;
+
+  const curlExample = `curl -X POST ${baseUrl}/api/text/generate \\
   -H "Content-Type: application/json" \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -d '{
@@ -289,7 +290,7 @@ function updatePythonExample() {
   const pythonExample = `import requests
 import json
 
-url = "https://aireclast.umiteski.workers.dev/api/text/generate"
+url = "${window.location.origin}/api/text/generate"
 headers = {
     "Content-Type": "application/json",
     "Authorization": "Bearer YOUR_API_KEY"
@@ -318,8 +319,10 @@ function updateJsExample() {
 
   if (!jsCode) return;
 
+  const baseUrl = window.location.origin;
+
   const jsExample = `async function generateText() {
-  const url = 'https://aireclast.umiteski.workers.dev/api/text/generate';
+  const url = '${baseUrl}/api/text/generate';
   const data = {
     prompt: "${escapeJson(currentSettings.prompt || 'Write a short story about a robot learning to paint')}",
     model: "${currentSettings.model}"

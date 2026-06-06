@@ -133,33 +133,20 @@ function initApiKey() {
         return;
       }
 
-      // Generate a new API key
-      const newApiKey = generateApiKey();
+      const response = await app.apiRequest('auth/regenerate-key', 'POST');
 
-      // Save to localStorage
-      localStorage.setItem('reclast_api_key', newApiKey);
-
-      // Update input field
-      apiKeyInput.value = newApiKey;
-
-      app.showAlert('API key regenerated successfully', 'success');
+      if (response.success && response.data?.apiKey) {
+        localStorage.setItem('reclast_api_key', response.data.apiKey);
+        apiKeyInput.value = response.data.apiKey;
+        app.showAlert('API key regenerated successfully', 'success');
+      } else {
+        app.showAlert(response.error || 'Failed to regenerate API key', 'error');
+      }
     } catch (error) {
       console.error('Failed to regenerate API key:', error);
       app.showAlert('Failed to regenerate API key', 'error');
     }
   });
-}
-
-/**
- * Generate a new API key
- */
-function generateApiKey() {
-  // Generate a random string for the API key
-  const randomPart = Array.from(crypto.getRandomValues(new Uint8Array(24)))
-    .map(b => b.toString(16).padStart(2, '0'))
-    .join('');
-
-  return `reclast_${randomPart}`;
 }
 
 // Add to window.app for initialization from main.js

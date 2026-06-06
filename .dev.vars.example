@@ -1,0 +1,8 @@
+# Copy to .dev.vars for local development (never commit .dev.vars)
+#
+# For wrangler.json: copy wrangler.example.json → wrangler.json
+# KV namespace ID: Dashboard → Workers KV → AUTH_STORE → Settings (not KV Pairs!)
+#
+ALLOWED_EMAILS=your@email.com
+USER_CREDENTIALS=admin:yourpassword
+JWT_SECRET=generate-a-long-random-string-here

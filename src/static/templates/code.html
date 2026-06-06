@@ -55,11 +55,11 @@
 
         <div class="chat-container">
           <div class="chat-header">
-            <div class="chat-title">Code with <span id="chat-model-name">Llama 2</span></div>
+            <div class="chat-title">Code with <span id="chat-model-name">Qwen 2.5 Coder</span></div>
             <div class="model-selector">
               <label for="model-select">Model:</label>
               <select id="model-select" class="form-control">
-                <option value="@cf/meta/llama-2-7b-chat-int8">Llama 2 (7B)</option>
+                <option value="">Loading models...</option>
               </select>
             </div>
           </div>
@@ -106,12 +106,12 @@
               </button>
             </div>
             <div class="code-block">
-              <code id="curl-code">curl -X POST https://aireclast.umiteski.workers.dev/api/code/generate \
+              <code id="curl-code">curl -X POST https://YOUR-WORKER.workers.dev/api/code/generate \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -d '{
     "prompt": "Write a function to calculate the Fibonacci sequence in JavaScript",
-    "model": "@cf/meta/llama-2-7b-chat-int8"
+    "model": "@cf/qwen/qwen2.5-coder-32b-instruct"
   }'</code>
             </div>
           </div>
@@ -127,14 +127,14 @@
               <code id="python-code">import requests
 import json
 
-url = "https://aireclast.umiteski.workers.dev/api/code/generate"
+url = "https://YOUR-WORKER.workers.dev/api/code/generate"
 headers = {
     "Content-Type": "application/json",
     "Authorization": "Bearer YOUR_API_KEY"
 }
 data = {
     "prompt": "Write a function to calculate the Fibonacci sequence in JavaScript",
-    "model": "@cf/meta/llama-2-7b-chat-int8"
+    "model": "@cf/qwen/qwen2.5-coder-32b-instruct"
 }
 
 response = requests.post(url, headers=headers, data=json.dumps(data))
@@ -156,10 +156,10 @@ else:
             </div>
             <div class="code-block">
               <code id="js-code">async function generateCode() {
-  const url = 'https://aireclast.umiteski.workers.dev/api/code/generate';
+  const url = 'https://YOUR-WORKER.workers.dev/api/code/generate';
   const data = {
     prompt: "Write a function to calculate the Fibonacci sequence in JavaScript",
-    model: "@cf/meta/llama-2-7b-chat-int8"
+    model: "@cf/qwen/qwen2.5-coder-32b-instruct"
   };
 
   try {

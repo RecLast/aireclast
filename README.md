@@ -22,6 +22,10 @@ A comprehensive AI API gateway built with Cloudflare Workers and Cloudflare Work
 - **API Documentation**: Built-in examples for cURL, Python, and JavaScript with your personal API key
 - **Comprehensive Error Handling**: Robust validation and error responses
 
+## Documentation
+
+- [Mobile API integration](docs/MOBILE_API.md)
+
 ## Web Interface
 
 The application includes a complete web interface with the following pages:

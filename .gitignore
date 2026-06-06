@@ -182,6 +182,10 @@ build/
 # Turbo output
 .turbo/
 
-# Sensitive configuration files
-wrangler.json
+# Sensitive / local-only configuration (never commit)
 .dev.vars
+wrangler.json
+
+# Safe templates — commit these
+# .dev.vars.example
+# wrangler.example.json

@@ -4,7 +4,7 @@
 
 // Store current settings for API examples
 let currentSettings = {
-  model: '@cf/meta/llama-2-7b-chat-int8',
+  model: '@cf/qwen/qwen2.5-coder-32b-instruct',
   prompt: ''
 };
 
@@ -119,7 +119,7 @@ async function fetchModels() {
     const response = await app.apiRequest('code/models', 'GET');
 
     if (response.success && response.data && response.data.models) {
-      populateModelSelect(response.data.models);
+      populateModelSelect(response.data.models, response.data.defaultModel);
     }
   } catch (error) {
     console.error('Error fetching models:', error);
@@ -130,31 +130,30 @@ async function fetchModels() {
 /**
  * Populate the model select dropdown
  */
-function populateModelSelect(models) {
+function populateModelSelect(models, defaultModelId) {
   const modelSelect = document.getElementById('model-select');
 
   if (!modelSelect) return;
 
-  // Clear existing options
   modelSelect.innerHTML = '';
 
-  // Add models to select
   models.forEach(model => {
     const option = document.createElement('option');
     option.value = model.id;
-    option.textContent = model.name;
-    option.title = model.description;
+    option.textContent = `${model.name} (${model.neuronCost} Neuron cost)`;
+    option.title = `${model.description} — ${model.neuronNote}`;
     modelSelect.appendChild(option);
   });
 
-  // Update current settings
-  if (models.length > 0) {
-    currentSettings.model = models[0].id;
+  const initialModel = defaultModelId || models[0]?.id;
+  if (initialModel) {
+    modelSelect.value = initialModel;
+    currentSettings.model = initialModel;
 
-    // Update chat header with selected model
     const chatModelName = document.getElementById('chat-model-name');
-    if (chatModelName) {
-      chatModelName.textContent = models[0].name;
+    const selected = models.find((m) => m.id === initialModel);
+    if (chatModelName && selected) {
+      chatModelName.textContent = selected.name;
     }
 
     updateApiExamples();
@@ -177,14 +176,27 @@ async function generateCode(prompt, model) {
 }
 
 /**
- * Format code blocks in text
- * Detects code blocks with ```language and ``` syntax
+ * Format code blocks in text — escape all content first to prevent XSS
  */
 function formatCodeInText(text) {
-  // Replace code blocks with formatted HTML
-  return text.replace(/```(\w*)([\s\S]*?)```/g, (match, language, code) => {
-    return `<pre><code class="language-${language || 'plaintext'}">${escapeHtml(code.trim())}</code></pre>`;
+  const codeBlocks = [];
+  const withPlaceholders = text.replace(/```(\w*)([\s\S]*?)```/g, (match, language, code) => {
+    const index = codeBlocks.length;
+    codeBlocks.push({
+      language: (language || 'plaintext').replace(/[^\w+-]/g, ''),
+      code: code.trim(),
+    });
+    return `\x00CODEBLOCK${index}\x00`;
   });
+
+  let safe = escapeHtml(withPlaceholders);
+  safe = safe.replace(/\x00CODEBLOCK(\d+)\x00/g, (_, index) => {
+    const block = codeBlocks[Number(index)];
+    if (!block) return '';
+    return `<pre><code class="language-${block.language}">${escapeHtml(block.code)}</code></pre>`;
+  });
+
+  return safe.replace(/\n/g, '<br>');
 }
 
 /**
@@ -321,7 +333,9 @@ function updateCurlExample() {
 
   if (!curlCode) return;
 
-  const curlExample = `curl -X POST https://aireclast.umiteski.workers.dev/api/code/generate \\
+  const baseUrl = window.location.origin;
+
+  const curlExample = `curl -X POST ${baseUrl}/api/code/generate \\
   -H "Content-Type: application/json" \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -d '{
@@ -343,7 +357,7 @@ function updatePythonExample() {
   const pythonExample = `import requests
 import json
 
-url = "https://aireclast.umiteski.workers.dev/api/code/generate"
+url = "${window.location.origin}/api/code/generate"
 headers = {
     "Content-Type": "application/json",
     "Authorization": "Bearer YOUR_API_KEY"
@@ -372,8 +386,10 @@ function updateJsExample() {
 
   if (!jsCode) return;
 
+  const baseUrl = window.location.origin;
+
   const jsExample = `async function generateCode() {
-  const url = 'https://aireclast.umiteski.workers.dev/api/code/generate';
+  const url = '${baseUrl}/api/code/generate';
   const data = {
     prompt: "${escapeJson(currentSettings.prompt || 'Write a function to calculate the Fibonacci sequence in JavaScript')}",
     model: "${currentSettings.model}"

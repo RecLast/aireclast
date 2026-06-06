@@ -6,140 +6,65 @@ import { CodeGenerationRequest, Env } from '../types';
 import { errorResponse, successResponse } from '../utils/response';
 import { validateRequestBody } from '../middleware/validation';
 import { requireAuth } from '../middleware/auth';
+import { CODE_MODELS, DEFAULT_CODE_MODEL, getCodeModel } from '../config/models';
+import { buildTextRunInput, extractTextResponse, validatePromptLength } from '../utils/ai';
+import { enforceAiRateLimit } from '../utils/rateLimit';
+import { scheduleStatsIncrement } from '../utils/stats';
 
 const codeRouter = Router({ base: '/api/code' });
 
-// Apply authentication to all routes
 codeRouter.all('*', requireAuth);
 
-/**
- * Generate code
- * POST /api/code/generate
- */
 codeRouter.post('/generate',
   validateRequestBody(['prompt']),
-  async (request: IRequest, env: Env) => {
+  async (request: IRequest, env: Env, ctx: ExecutionContext) => {
     try {
-      const data = request.data || {} as CodeGenerationRequest;
+      const rateLimited = await enforceAiRateLimit(
+        request,
+        env,
+        request.user?.email || 'anonymous'
+      );
+      if (rateLimited) return rateLimited;
 
-      // Get prompt and validate
-      const prompt = data.prompt || '';
+      const data = request.data || {} as CodeGenerationRequest;
+      const prompt = data.prompt?.trim() || '';
+
       if (!prompt) {
-        return errorResponse('Prompt is required', 400);
+        return errorResponse('Prompt is required', 400, request);
       }
 
-      // Default model - using the same LLMs as text generation but with different prompting
-      const model = data.model || '@cf/meta/llama-2-7b-chat-int8';
+      const promptError = validatePromptLength(prompt);
+      if (promptError) {
+        return errorResponse(promptError, 400, request);
+      }
+
+      const modelConfig = getCodeModel(data.model || DEFAULT_CODE_MODEL);
       const options = data.options || {};
+      const enhancedPrompt = `Generate code for the following request. Return only the code unless explanations are explicitly requested:\n\n${prompt}`;
 
-      // Enhance the prompt for code generation
-      const enhancedPrompt = `Generate code for the following request. Only provide the code without explanations unless specifically asked for explanations: ${prompt}`;
+      const response = await env.AI.run(modelConfig.id, buildTextRunInput(enhancedPrompt, {
+        ...options,
+        temperature: options.temperature ?? 0.2,
+      }));
 
-      // Call the AI model
-      const response = await env.AI.run(model, {
-        prompt: enhancedPrompt,
-        ...options
-      });
-
-      // Update stats
-      await updateCodeStats(env);
+      scheduleStatsIncrement(ctx, env, 'code');
 
       return successResponse({
-        result: response,
-        model
-      });
+        result: extractTextResponse(response),
+        model: modelConfig.id,
+      }, request);
     } catch (error) {
       console.error('Code generation error:', error);
-      return errorResponse(`Error generating code: ${error instanceof Error ? error.message : 'Unknown error'}`, 500);
+      return errorResponse('Error generating code', 500, request);
     }
   }
 );
 
-/**
- * Get available code models
- * GET /api/code/models
- */
-codeRouter.get('/models', async (_request: IRequest, _env: Env) => {
-  try {
-    console.log('Fetching code models');
-
-    // In a real implementation, you would fetch this from Cloudflare's API
-    // For now, we'll return a static list - using the same models as text generation
-    // but optimized for code
-    const models = [
-      {
-        id: '@hf/thebloke/deepseek-coder-6.7b-base-awq',
-        name: 'DeepSeek Coder (6.7B)',
-        description: 'Specialized model for code generation with strong performance'
-      },
-      {
-        id: '@hf/thebloke/llama-2-13b-chat-awq',
-        name: 'Llama 2 (13B)',
-        description: 'Meta\'s Llama 2 larger model optimized for code generation'
-      },
-      {
-        id: '@cf/qwen/qwen1.5-14b-chat-awq',
-        name: 'Qwen 1.5 (14B)',
-        description: 'Alibaba\'s Qwen large language model for code generation'
-      },
-      {
-        id: '@cf/meta/llama-2-7b-chat-int8',
-        name: 'Llama 2 (7B)',
-        description: 'Meta\'s Llama 2 model optimized for code generation'
-      },
-      {
-        id: '@cf/mistral/mistral-7b-instruct-v0.1',
-        name: 'Mistral 7B',
-        description: 'Mistral AI\'s instruction-tuned model for code'
-      },
-      {
-        id: '@cf/openchat/openchat-3.5-0106',
-        name: 'OpenChat 3.5',
-        description: 'Open-source model with strong code generation capabilities'
-      }
-    ];
-
-    console.log(`Returning ${models.length} code models`);
-    return successResponse({ models });
-  } catch (error) {
-    console.error('Error fetching code models:', error);
-    return successResponse({
-      models: [
-        {
-          id: '@cf/meta/llama-2-7b-chat-int8',
-          name: 'Llama 2 (7B)',
-          description: 'Meta\'s Llama 2 model optimized for code generation'
-        }
-      ]
-    });
-  }
+codeRouter.get('/models', async (request: IRequest) => {
+  return successResponse({
+    models: CODE_MODELS,
+    defaultModel: DEFAULT_CODE_MODEL,
+  }, request);
 });
-
-/**
- * Update code generation stats
- */
-async function updateCodeStats(env: Env): Promise<void> {
-  try {
-    // Get current stats
-    const statsStr = await env.AUTH_STORE.get('stats');
-    let stats = statsStr ? JSON.parse(statsStr) : {
-      totalRequests: 0,
-      textRequests: 0,
-      imageRequests: 0,
-      codeRequests: 0,
-      lastUpdated: new Date().toISOString()
-    };
-
-    // Update stats
-    stats.totalRequests += 1;
-    stats.codeRequests += 1;
-    stats.lastUpdated = new Date().toISOString();
-
-    // Save stats
-    await env.AUTH_STORE.put('stats', JSON.stringify(stats));
-  } catch (error) {
-    console.error('Error updating stats:', error);
-  }
-}
 
 export default codeRouter;
