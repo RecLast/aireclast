@@ -178,6 +178,7 @@ dist
 # Wrangler output
 .wrangler/
 wrangler.local.json
+wrangler.generated.json
 build/
 
 # Turbo output

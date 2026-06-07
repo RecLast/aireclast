@@ -1,7 +1,8 @@
 # Copy to .dev.vars for local development (never commit .dev.vars)
 #
 # Local dev: npm run dev uses wrangler.local.json (gitignored) with AUTH_STORE KV.
-# Production: KV binding is set in Cloudflare Dashboard, not in wrangler.json.
+# Production deploy: set AUTH_STORE_KV_ID as encrypted build variable in Cloudflare (see README).
+# Runtime auth values: use Encrypt (Secret) in Worker Settings, not Plain text.
 #
 ALLOWED_EMAILS=your@email.com
 USER_CREDENTIALS=admin:yourpassword

@@ -291,21 +291,27 @@ Authorization: Bearer reclast_xxxxxxxxxxxxxxxxxxxx
    ```
    Note the returned ID for the next step.
 
-5. **IMPORTANT**: Configure secrets and the KV binding in the Cloudflare Dashboard (not in `wrangler.json`):
+5. **Production config (survives Git deploy)**
 
-   a. Go to Workers & Pages > Your Worker > Settings
+   `wrangler deploy` syncs the Worker to what is in the generated config. Bindings and plain-text variables that are **not** in that file are removed on each deploy. That is why Dashboard-only settings disappear after CI builds.
 
-   b. Add KV Namespace binding:
-      - In the "Bindings" section, click "+ Add"
-      - Type: KV Namespace
-      - Variable name: AUTH_STORE
-      - KV Namespace: Select your created namespace
+   **One-time setup:**
 
-   c. Add environment variables:
-      - In the "Variables and secrets" section, click "+ Add"
-      - Add ALLOWED_EMAILS (Plain text): Comma-separated list of emails allowed to access the application
-      - Add USER_CREDENTIALS (Plain text): Comma-separated list of username:password pairs (e.g., "admin:password123,user:pass456")
-      - Add JWT_SECRET (Secret): A secure secret key for JWT token generation
+   a. **Cloudflare Dashboard → aireclast → Settings → Builds → Variables and secrets**  
+      Add a **Secret** (encrypted build variable):
+      - Name: `AUTH_STORE_KV_ID`
+      - Value: your KV namespace ID (from step 4 or Workers KV → AUTH_STORE)
+
+   b. **Worker runtime secrets** (Settings → Variables and secrets on the Worker, not Builds) — use **Encrypt** for all three so deploy does not wipe them:
+      - `JWT_SECRET`
+      - `ALLOWED_EMAILS` (comma-separated emails)
+      - `USER_CREDENTIALS` (e.g. `user:password`)
+
+      Do **not** use Plain text for auth values; plain text vars are overwritten when `wrangler deploy` runs without a `[vars]` block.
+
+   c. Deploy command must be `npm run deploy` (runs `scripts/prepare-wrangler.mjs`, which injects the KV binding from `AUTH_STORE_KV_ID`).
+
+   **Local dev:** `npm run dev` uses gitignored `wrangler.local.json` (KV + `.dev.vars`). No build variable needed.
 
 7. **Authentication System**:
 

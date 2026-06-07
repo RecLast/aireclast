@@ -27,8 +27,8 @@
   },
   "scripts": {
     "cf-typegen": "wrangler types",
-    "check": "tsc && wrangler deploy --dry-run",
-    "deploy": "wrangler deploy",
+    "check": "tsc && node scripts/prepare-wrangler.mjs && wrangler deploy --dry-run --config wrangler.generated.json",
+    "deploy": "node scripts/prepare-wrangler.mjs && wrangler deploy --config wrangler.generated.json",
     "dev": "wrangler dev --config wrangler.local.json"
   }
 }
