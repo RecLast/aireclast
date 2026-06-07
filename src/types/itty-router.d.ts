@@ -5,6 +5,7 @@ declare module 'itty-router' {
   interface IRequest extends Request {
     data?: Record<string, any>;
     user?: UserSession;
+    params?: Record<string, string>;
     method: string;
     url: string;
     headers: Headers;

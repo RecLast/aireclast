@@ -119,6 +119,31 @@
             <div id="prompt-display" class="image-prompt"></div>
           </div>
 
+          <div id="queue-modal" class="queue-modal" aria-hidden="true">
+            <div class="queue-modal-backdrop"></div>
+            <div class="queue-modal-dialog" role="dialog" aria-labelledby="queue-modal-title" aria-modal="true">
+              <div class="queue-modal-icon">
+                <i class="fas fa-hourglass-half"></i>
+              </div>
+              <h2 id="queue-modal-title" class="queue-modal-title">High demand</h2>
+              <p class="queue-modal-text">Your image request is in the queue to keep the service stable.</p>
+              <div class="queue-modal-stats">
+                <div class="queue-stat">
+                  <span class="queue-stat-label">Position</span>
+                  <span id="queue-position" class="queue-stat-value">1</span>
+                </div>
+                <div class="queue-stat">
+                  <span class="queue-stat-label">Estimated wait</span>
+                  <span id="queue-countdown" class="queue-stat-value">0s</span>
+                </div>
+              </div>
+              <div class="queue-modal-progress">
+                <div id="queue-progress-bar" class="queue-modal-progress-bar"></div>
+              </div>
+              <p class="queue-modal-hint">Please keep this window open. Generation will continue automatically.</p>
+            </div>
+          </div>
+
           <div class="api-tabs" id="api-tabs">
             <div class="tabs">
               <div class="tab active" data-tab="curl">cURL</div>

@@ -165,6 +165,13 @@
   display: flex;
 }
 
+#generate-button.is-generating,
+#generate-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.85;
+  pointer-events: none;
+}
+
 .spinner {
   border: 4px solid rgba(0, 0, 0, 0.1);
   border-radius: 50%;
@@ -255,6 +262,112 @@
 
 .copy-button:hover {
   color: #f9fafb;
+}
+
+.queue-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-lg);
+}
+
+.queue-modal.active {
+  display: flex;
+}
+
+.queue-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.72);
+  backdrop-filter: blur(4px);
+}
+
+.queue-modal-dialog {
+  position: relative;
+  width: min(100%, 420px);
+  background: var(--card-background);
+  border-radius: var(--border-radius-xl);
+  box-shadow: var(--shadow-lg);
+  padding: var(--spacing-xl);
+  text-align: center;
+}
+
+.queue-modal-icon {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto var(--spacing-md);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(79, 70, 229, 0.12);
+  color: var(--primary-color);
+  font-size: 1.5rem;
+}
+
+.queue-modal-title {
+  font-size: 1.35rem;
+  margin-bottom: var(--spacing-sm);
+}
+
+.queue-modal-text,
+.queue-modal-hint {
+  color: var(--text-light);
+  font-size: 0.95rem;
+}
+
+.queue-modal-text {
+  margin-bottom: var(--spacing-lg);
+}
+
+.queue-modal-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+}
+
+.queue-stat {
+  background: var(--background-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-md);
+}
+
+.queue-stat-label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-light);
+  margin-bottom: var(--spacing-xs);
+}
+
+.queue-stat-value {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+.queue-modal-progress {
+  height: 8px;
+  background: var(--border-color);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: var(--spacing-md);
+}
+
+.queue-modal-progress-bar {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+  transition: width 1s linear;
+}
+
+.queue-modal-hint {
+  margin-top: var(--spacing-sm);
 }
 
 @media (max-width: 768px) {

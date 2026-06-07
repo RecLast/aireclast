@@ -240,12 +240,66 @@ Same body shape as text.
 | `steps` | No | Clamped to model `maxSteps` |
 | `confirmPremium` | Flux only | Required `true` for `@cf/black-forest-labs/flux-1-schnell` |
 
-**Response:** Binary PNG — not JSON.
+**Response:** Binary PNG — not JSON — when generation starts immediately (**200**).
 
 ```
 Content-Type: image/png
 Body: raw bytes
 ```
+
+#### Image generation queue
+
+During high demand, image requests may be queued before generation starts. This protects service stability under load. **Text and code endpoints are not queued.**
+
+**Flow:**
+
+1. `POST /api/image/generate` with the usual body.
+2. If the server is busy, response is **202 JSON** (not PNG):
+
+```json
+{
+  "success": true,
+  "data": {
+    "queued": true,
+    "queueToken": "550e8400-e29b-41d4-a716-446655440000",
+    "position": 3,
+    "waitSeconds": 14,
+    "message": "Image generation is queued due to high demand. Please wait."
+  }
+}
+```
+
+3. Poll `GET /api/image/queue/:queueToken` every 1–2 seconds.
+
+**Waiting:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "status": "waiting",
+    "position": 2,
+    "remainingSeconds": 6
+  }
+}
+```
+
+**Ready to generate:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "status": "ready",
+    "position": 1,
+    "remainingSeconds": 0
+  }
+}
+```
+
+4. When `status` is `ready`, repeat `POST /api/image/generate` with the **same body** plus `"queueToken"`.
+
+**Mobile UI:** Show a full-screen waiting state while `status` is `waiting` (position + countdown). Resume generation automatically when ready.
 
 **Flutter (Dio) example:**
 
@@ -266,6 +320,8 @@ final response = await dio.post(
 );
 final pngBytes = response.data as Uint8List;
 ```
+
+**Queued generation (202):** Check `response.statusCode == 202`, parse JSON for `queueToken`, poll queue status, then POST again with `queueToken` before reading bytes.
 
 **Flux models:** If `requiresPremiumConfirm: true`, show a confirmation dialog and send `"confirmPremium": true`.
 
@@ -306,8 +362,9 @@ final pngBytes = response.data as Uint8List;
 1. First launch: login → store `apiKey` in secure storage
 2. Cache model lists (e.g. 24h TTL)
 3. Send selected `model`; for images also `width`, `height`, `steps`
-4. On `401` → redirect to login
-5. On `429` → honor `Retry-After` or show a user message
+4. Handle image queue (`202` → poll → retry with `queueToken`) when the service is under load
+5. On `401` → redirect to login
+6. On `429` → honor `Retry-After` or show a user message
 
 ---
 
@@ -317,6 +374,7 @@ final pngBytes = response.data as Uint8List;
 |------|---------|---------------|
 | 401 | Invalid or expired key | Re-login |
 | 402 | Flux confirmation missing | Confirm dialog + `confirmPremium: true` |
+| 425 | Queue not ready yet | Keep polling queue status |
 | 429 | Rate limited | Wait or inform user |
 | 400 | Prompt/model error | Show `error` message |
 | 500 | Server error | Retry or support message |
@@ -329,7 +387,7 @@ final pngBytes = response.data as Uint8List;
 2. `GET /api/text/models` → 200 with Bearer
 3. `POST /api/text/generate` → non-empty `result`
 4. `GET /api/image/models` → `dimensions` list
-5. `POST /api/image/generate` → PNG bytes length > 0
+5. `POST /api/image/generate` → PNG bytes (**200**) or queue ticket (**202** → poll → retry with `queueToken`)
 6. `GET /api/stats` → counters increment
 
 ---

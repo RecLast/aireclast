@@ -177,6 +177,7 @@ dist
 
 # Wrangler output
 .wrangler/
+wrangler.local.json
 build/
 
 # Turbo output

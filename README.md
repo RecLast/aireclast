@@ -15,6 +15,7 @@ A comprehensive AI API gateway built with Cloudflare Workers and Cloudflare Work
 - **Modern Web Interface**: Responsive and intuitive UI for interacting with AI models
 - **Text Generation**: Generate text using advanced LLMs like Llama 2-13B, Qwen 1.5-14B, Gemma-2B, and more
 - **Image Generation**: Create images from text prompts using Stable Diffusion XL, SDXL Lightning, DreamShaper, and Flux
+- **Image Queue**: Automatic queue during high image-generation load to protect service stability
 - **Code Generation**: Generate code with AI assistance using specialized models like DeepSeek Coder
 - **Secure Authentication**: Two-step authentication with email verification and username/password
 - **API Key Management**: Generate and manage your API keys for programmatic access
@@ -145,6 +146,57 @@ Authorization: Bearer reclast_xxxxxxxxxxxxxxxxxxxx
   "confirmPremium": true
 }
 ```
+
+#### Image generation queue
+
+During high demand, image requests may be queued before generation starts. This applies **only to image generation** (not text or code).
+
+1. `POST /api/image/generate` may return **202** with queue details instead of PNG bytes.
+2. Poll `GET /api/image/queue/:queueToken` until `status` is `ready`.
+3. Submit the same generation payload again with `"queueToken": "..."` to receive the PNG.
+
+**202 response example:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "queued": true,
+    "queueToken": "550e8400-e29b-41d4-a716-446655440000",
+    "position": 3,
+    "waitSeconds": 14,
+    "message": "Image generation is queued due to high demand. Please wait."
+  }
+}
+```
+
+**Queue status example:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "status": "waiting",
+    "position": 2,
+    "remainingSeconds": 6
+  }
+}
+```
+
+When ready:
+
+```json
+{
+  "success": true,
+  "data": {
+    "status": "ready",
+    "position": 1,
+    "remainingSeconds": 0
+  }
+}
+```
+
+The web UI shows a pop-up while queued. Mobile clients should use the same API flow and may present a waiting screen during the queue window.
 
 ### Code Generation
 

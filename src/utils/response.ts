@@ -24,12 +24,19 @@ export function jsonResponse(data: unknown, status: number = 200, request?: Requ
 /**
  * Create a success API response
  */
-export function successResponse<T>(data: T, request?: Request): Response {
+export function successResponse<T>(data: T, request?: Request, status = 200): Response {
   const response: ApiResponse<T> = {
     success: true,
     data,
   };
-  return jsonResponse(response, 200, request);
+  return jsonResponse(response, status, request);
+}
+
+/**
+ * Queue accepted — client should wait, poll status, then retry with queueToken
+ */
+export function queuedResponse<T>(data: T, request?: Request): Response {
+  return successResponse(data, request, 202);
 }
 
 /**

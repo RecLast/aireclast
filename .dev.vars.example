@@ -1,6 +1,7 @@
 # Copy to .dev.vars for local development (never commit .dev.vars)
 #
-# wrangler.json is local-only (gitignored). KV binding: Cloudflare Dashboard → Worker → Bindings
+# Local dev: npm run dev uses wrangler.local.json (gitignored) with AUTH_STORE KV.
+# Production: KV binding is set in Cloudflare Dashboard, not in wrangler.json.
 #
 ALLOWED_EMAILS=your@email.com
 USER_CREDENTIALS=admin:yourpassword

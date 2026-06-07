@@ -3,6 +3,7 @@
  */
 
 let imageModelsCatalog = [];
+let isImageGenerating = false;
 let currentSettings = {
   model: '',
   width: 1024,
@@ -11,6 +12,35 @@ let currentSettings = {
   prompt: '',
   confirmPremium: false,
 };
+
+function setGenerateBusy(isBusy, generateButton, imageLoading, imageForm) {
+  isImageGenerating = isBusy;
+
+  if (generateButton) {
+    generateButton.disabled = isBusy;
+    generateButton.classList.toggle('is-generating', isBusy);
+    generateButton.setAttribute('aria-busy', isBusy ? 'true' : 'false');
+
+    if (isBusy) {
+      if (!generateButton.dataset.originalHtml) {
+        generateButton.dataset.originalHtml = generateButton.innerHTML;
+      }
+      generateButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+    } else if (generateButton.dataset.originalHtml) {
+      generateButton.innerHTML = generateButton.dataset.originalHtml;
+    }
+  }
+
+  if (imageLoading) {
+    imageLoading.classList.toggle('active', isBusy);
+  }
+
+  if (imageForm) {
+    imageForm.querySelectorAll('input, textarea, select').forEach((el) => {
+      el.disabled = isBusy;
+    });
+  }
+}
 
 function initImagePage() {
   const imageForm = document.getElementById('image-form');
@@ -54,6 +84,10 @@ function initImagePage() {
     imageForm.addEventListener('submit', async (e) => {
       e.preventDefault();
 
+      if (isImageGenerating) {
+        return;
+      }
+
       const prompt = promptInput.value.trim();
 
       if (!prompt) {
@@ -76,8 +110,7 @@ function initImagePage() {
         }
       }
 
-      generateButton.disabled = true;
-      imageLoading.classList.add('active');
+      setGenerateBusy(true, generateButton, imageLoading, imageForm);
 
       try {
         const { width, height, steps } = getSelectedDimensionsAndSteps(modelConfig);
@@ -108,8 +141,7 @@ function initImagePage() {
         console.error('Error generating image:', error);
         app.showAlert(error.message || 'Failed to generate image. Please try again.', 'error');
       } finally {
-        generateButton.disabled = false;
-        imageLoading.classList.remove('active');
+        setGenerateBusy(false, generateButton, imageLoading, imageForm);
       }
     });
   }
@@ -253,23 +285,33 @@ function getSelectedDimensionsAndSteps(modelConfig) {
 }
 
 async function generateImage(prompt, model, width, height, steps, confirmPremium = false) {
-  const headers = { 'Content-Type': 'application/json' };
-  const apiKey = localStorage.getItem('reclast_api_key');
-  if (apiKey) {
-    headers.Authorization = `Bearer ${apiKey}`;
-  }
-
   const body = { prompt, model, width, height, steps };
   if (confirmPremium) {
     body.confirmPremium = true;
   }
 
-  const response = await fetch('/api/image/generate', {
-    method: 'POST',
-    body: JSON.stringify(body),
-    headers,
-    credentials: 'same-origin',
-  });
+  let response = await postImageGenerate(body);
+
+  if (response.status === 202) {
+    const queueData = await response.json();
+    if (!queueData.success || !queueData.data?.queueToken) {
+      throw new Error(queueData.error || 'Failed to enter image queue');
+    }
+
+    await waitForImageQueue(queueData.data);
+    response = await postImageGenerate({ ...body, queueToken: queueData.data.queueToken });
+  }
+
+  if (response.status === 425) {
+    let errorMessage = 'Queue is still active. Please wait.';
+    try {
+      const errorData = await response.json();
+      errorMessage = errorData.error || errorMessage;
+    } catch {
+      // ignore parse errors
+    }
+    throw new Error(errorMessage);
+  }
 
   if (!response.ok) {
     let errorMessage = 'Failed to generate image';
@@ -288,6 +330,104 @@ async function generateImage(prompt, model, width, height, steps, confirmPremium
   }
 
   return URL.createObjectURL(blob);
+}
+
+async function postImageGenerate(body) {
+  const headers = { 'Content-Type': 'application/json' };
+  const apiKey = localStorage.getItem('reclast_api_key');
+  if (apiKey) {
+    headers.Authorization = `Bearer ${apiKey}`;
+  }
+
+  return fetch('/api/image/generate', {
+    method: 'POST',
+    body: JSON.stringify(body),
+    headers,
+    credentials: 'same-origin',
+  });
+}
+
+function showQueueModal(position, waitSeconds) {
+  const modal = document.getElementById('queue-modal');
+  const positionEl = document.getElementById('queue-position');
+  const countdownEl = document.getElementById('queue-countdown');
+  const progressBar = document.getElementById('queue-progress-bar');
+
+  if (!modal || !positionEl || !countdownEl || !progressBar) {
+    return;
+  }
+
+  positionEl.textContent = String(position);
+  countdownEl.textContent = `${waitSeconds}s`;
+  progressBar.style.width = '0%';
+  modal.classList.add('active');
+  modal.setAttribute('aria-hidden', 'false');
+}
+
+function updateQueueModal(position, remainingSeconds, totalSeconds) {
+  const positionEl = document.getElementById('queue-position');
+  const countdownEl = document.getElementById('queue-countdown');
+  const progressBar = document.getElementById('queue-progress-bar');
+
+  if (positionEl) {
+    positionEl.textContent = String(position);
+  }
+
+  if (countdownEl) {
+    countdownEl.textContent = `${Math.max(0, remainingSeconds)}s`;
+  }
+
+  if (progressBar && totalSeconds > 0) {
+    const elapsed = totalSeconds - remainingSeconds;
+    progressBar.style.width = `${Math.min(100, (elapsed / totalSeconds) * 100)}%`;
+  }
+}
+
+function hideQueueModal() {
+  const modal = document.getElementById('queue-modal');
+  if (!modal) return;
+
+  modal.classList.remove('active');
+  modal.setAttribute('aria-hidden', 'true');
+}
+
+async function waitForImageQueue(queueData) {
+  const { queueToken, position, waitSeconds } = queueData;
+  showQueueModal(position, waitSeconds);
+
+  return new Promise((resolve, reject) => {
+    let settled = false;
+
+    const finish = (fn) => {
+      if (settled) return;
+      settled = true;
+      clearInterval(intervalId);
+      hideQueueModal();
+      fn();
+    };
+
+    const poll = async () => {
+      try {
+        const response = await app.apiRequest(`image/queue/${queueToken}`, 'GET');
+        if (!response.success) {
+          finish(() => reject(new Error(response.error || 'Failed to check queue status')));
+          return;
+        }
+
+        const { status, position: currentPosition, remainingSeconds } = response.data;
+        updateQueueModal(currentPosition || position, remainingSeconds ?? 0, waitSeconds);
+
+        if (status === 'ready') {
+          finish(resolve);
+        }
+      } catch (error) {
+        finish(() => reject(error));
+      }
+    };
+
+    poll();
+    const intervalId = setInterval(poll, 1000);
+  });
 }
 
 function displayImage(imageUrl) {

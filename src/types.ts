@@ -54,6 +54,15 @@ export interface ImageGenerationRequest {
   height?: number;
   steps?: number;
   confirmPremium?: boolean;
+  queueToken?: string;
+}
+
+export interface ImageQueueTicketResponse {
+  queued: true;
+  queueToken: string;
+  position: number;
+  waitSeconds: number;
+  message: string;
 }
 
 // Text generation request
